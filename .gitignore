@@ -2,3 +2,4 @@ images
 training_program.md
 .vscode
 .env
+__pycache__
