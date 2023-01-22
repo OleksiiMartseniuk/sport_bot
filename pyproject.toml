@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "sport-bot"
+version = "0.1.0"
+description = ""
+authors = ["OleksiiMartseniuk <martsenyk.oleksii@ezcloudllc.com>"]
+readme = "README.md"
+packages = [{include = "sport_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
