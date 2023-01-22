@@ -31,6 +31,7 @@ exercises = Table(
     Column("title", String, nullable=False),
     Column("number_approaches", Integer),
     Column("number_repetitions", String),
+    Column("day", String),
     Column("image", String),
 )
 
@@ -38,6 +39,6 @@ exercises = Table(
 program_exercises = Table(
     'program_exercises',
     metadata,
-    Column("program_id", ForeignKey("programs.id"), primary_key=True),
-    Column("exercises_id", ForeignKey("exercises.id"), primary_key=True),
+    Column("program_id", ForeignKey("programs.id")),
+    Column("exercises_id", ForeignKey("exercises.id")),
 )

@@ -1,8 +1,8 @@
-"""Init tabl program
+"""init
 
-Revision ID: bcdb62105258
+Revision ID: 2805d8614fbe
 Revises: 
-Create Date: 2023-01-22 17:23:48.520007
+Create Date: 2023-01-22 19:53:43.663982
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'bcdb62105258'
+revision = '2805d8614fbe'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,6 +28,7 @@ def upgrade() -> None:
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('number_approaches', sa.Integer(), nullable=True),
     sa.Column('number_repetitions', sa.String(), nullable=True),
+    sa.Column('day', sa.String(), nullable=True),
     sa.Column('image', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
@@ -40,11 +41,10 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('program_exercises',
-    sa.Column('program_id', sa.Integer(), nullable=False),
-    sa.Column('exercises_id', sa.Integer(), nullable=False),
+    sa.Column('program_id', sa.Integer(), nullable=True),
+    sa.Column('exercises_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['exercises_id'], ['exercises.id'], ),
-    sa.ForeignKeyConstraint(['program_id'], ['programs.id'], ),
-    sa.PrimaryKeyConstraint('program_id', 'exercises_id')
+    sa.ForeignKeyConstraint(['program_id'], ['programs.id'], )
     )
     # ### end Alembic commands ###
 
