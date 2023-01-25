@@ -23,7 +23,10 @@ async def get_programs_list(category_id: int) -> list[schemas.Program]:
         return [schemas.Program(*item) for item in result.fetchall()]
 
 
-async def get_exercises(program_id: int, day: str = None) -> list:
+async def get_exercises(
+    program_id: int,
+    day: str = ""
+) -> list[schemas.Exercises]:
     async with async_session() as session:
         query = select(exercises).join(program_exercises).where(
             program_exercises.c.program_id == program_id)
