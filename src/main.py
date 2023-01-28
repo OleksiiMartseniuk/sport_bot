@@ -3,6 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher, executor
 
 from bot.handlers.menu_program import register_handlers_program
+from bot.handlers.commands import setup_bot_commands
 
 from config import TELEGRAM_TOKEN
 
@@ -19,5 +20,9 @@ dp = Dispatcher(bot)
 register_handlers_program(dp)
 
 
+async def on_startup(dp: Dispatcher):
+    await setup_bot_commands(bot)
+
+
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
