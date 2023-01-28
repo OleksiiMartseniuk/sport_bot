@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from database import async_session
 from programs.models import category, program, exercises, program_exercises
@@ -54,3 +54,12 @@ async def get_day_list(program_id: int) -> list[int]:
             ).distinct().order_by(exercises.c.day)
         result = await session.execute(query)
         return [day[0] for day in result.fetchall()]
+
+
+async def set_telegram_image_id(exercises_id: int, file_id: str) -> None:
+    async with async_session() as session:
+        query = update(exercises).where(exercises.c.id == exercises_id).values(
+            telegram_image_id=file_id
+        )
+        await session.execute(query)
+        await session.commit()
