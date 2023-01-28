@@ -6,6 +6,7 @@ from aiogram import Dispatcher, types
 
 from config import MEDIA_ROOT
 from programs import service
+from programs.constants import DAY_WEEK
 from bot.keyboard.inline import menu_keyboard
 
 
@@ -48,7 +49,6 @@ async def list_day(
     **kwargs
 ):
     markup = await menu_keyboard.day_keyboard(category, program)
-
     exercises = await service.get_exercises_list(program_id=program)
     day_week = defaultdict(list)
     for e in exercises:
@@ -57,7 +57,8 @@ async def list_day(
         )
     text_list = []
     for day in day_week:
-        text_list.append(f"\n<b>{day.capitalize()}</b>")
+        day_text = DAY_WEEK.get(day, "").capitalize()
+        text_list.append(f"\n<b>{day_text}</b>")
         text_list.extend(day_week[day])
     text = "\n".join(text_list)
     await callback.message.edit_text(
@@ -71,13 +72,13 @@ async def list_exercises(
     callback: types.CallbackQuery,
     category: int,
     program: int,
-    day: str,
+    day: int,
     **kwargs
 ):
     markup = await menu_keyboard.exercises_all_keyboard(category, program, day)
-    text = f"<b>{day.capitalize()}</b>"
+    day_text = DAY_WEEK.get(day, "").capitalize()
     await callback.message.edit_text(
-        text,
+        f"<b>{day_text}</b>",
         reply_markup=markup,
         parse_mode=types.ParseMode.HTML
     )
@@ -87,7 +88,7 @@ async def get_exercises(
     callback: types.CallbackQuery,
     category: int,
     program: int,
-    day: str,
+    day: int,
     exercises: int
 ):
     markup = await menu_keyboard.exercises_keyboard(
@@ -128,7 +129,7 @@ async def navigate(call: types.CallbackQuery, callback_data: dict):
     current_level = callback_data.get("level", "0")
     category = callback_data.get("category", 0)
     program = callback_data.get("program", 0)
-    day = callback_data.get("day", "")
+    day = callback_data.get("day", 0)
     exercises = callback_data.get("exercises", 0)
 
     levels = {
@@ -145,7 +146,7 @@ async def navigate(call: types.CallbackQuery, callback_data: dict):
         call,
         category=int(category),
         program=int(program),
-        day=day,
+        day=int(day),
         exercises=int(exercises)
     )
 
