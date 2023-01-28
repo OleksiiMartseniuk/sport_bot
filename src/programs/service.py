@@ -25,13 +25,15 @@ async def get_programs_list(category_id: int) -> list[schemas.Program]:
 
 async def get_exercises_list(
     program_id: int,
-    day: str = ""
+    day: int | None = None
 ) -> list[schemas.Exercises]:
     async with async_session() as session:
         query = select(exercises).join(program_exercises).where(
             program_exercises.c.program_id == program_id)
-        if day:
+        if day is not None:
             query = query.where(exercises.c.day == day)
+        else:
+            query = query.order_by(exercises.c.day)
         result = await session.execute(query)
         return [schemas.Exercises(*item) for item in result.fetchall()]
 
@@ -44,13 +46,10 @@ async def get_exercises(exercises_id: int) -> schemas.Exercises | None:
         return schemas.Exercises(*item) if item else None
 
 
-async def get_day_list(program_id: int) -> list[str]:
-    day_week_key = [
-        "понедельник", "вторник", "среда",
-        "четверг", "пятница", "суббота", "воскресения"]
+async def get_day_list(program_id: int) -> list[int]:
     async with async_session() as session:
         query = select(exercises.c.day).join(program_exercises).where(
-            program_exercises.c.program_id == program_id).distinct()
+            program_exercises.c.program_id == program_id
+            ).distinct().order_by(exercises.c.day)
         result = await session.execute(query)
-        day_list = [day[0] for day in result.fetchall()]
-        return sorted(day_list, key=day_week_key.index)
+        return [day[0] for day in result.fetchall()]

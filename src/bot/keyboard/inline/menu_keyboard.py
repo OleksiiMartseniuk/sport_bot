@@ -2,6 +2,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
 from programs import service
+from programs.constants import DAY_WEEK
+
 
 menu_cd = CallbackData(
     "show_menu",
@@ -17,7 +19,7 @@ def make_callback_data(
     level: int,
     category: int = 0,
     program: int = 0,
-    day: str = "",
+    day: int = 0,
     exercises: int = 0,
 ) -> str:
     return menu_cd.new(
@@ -94,7 +96,7 @@ async def day_keyboard(
         )
         markup.insert(
             InlineKeyboardButton(
-                text=day.capitalize(),
+                text=DAY_WEEK.get(day, "").capitalize(),
                 callback_data=callback_data
             )
         )
@@ -113,7 +115,7 @@ async def day_keyboard(
 async def exercises_all_keyboard(
     category_id: int,
     program_id: int,
-    day: str
+    day: int
 ) -> InlineKeyboardMarkup:
     CURRENT_LEVEL = 3
 
@@ -152,7 +154,7 @@ async def exercises_all_keyboard(
 async def exercises_keyboard(
     category_id: int,
     program_id: int,
-    day: str,
+    day: int,
     exercises_id: int
 ) -> InlineKeyboardMarkup:
     CURRENT_LEVEL = 4
