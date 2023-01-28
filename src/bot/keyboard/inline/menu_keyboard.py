@@ -3,18 +3,29 @@ from aiogram.utils.callback_data import CallbackData
 
 from programs import service
 
-menu_cd = CallbackData("show_menu", "level", "category", "program")
+menu_cd = CallbackData(
+    "show_menu",
+    "level",
+    "category",
+    "program",
+    "day",
+    "exercises"
+)
 
 
 def make_callback_data(
     level: int,
     category: int = 0,
     program: int = 0,
+    day: str = "",
+    exercises: int = 0,
 ) -> str:
     return menu_cd.new(
         level=level,
         category=category,
-        program=program
+        program=program,
+        day=day,
+        exercises=exercises
     )
 
 
@@ -64,11 +75,87 @@ async def program_keyboard(category_id: int) -> InlineKeyboardMarkup:
     return markup
 
 
-async def exercises_keyboard(
+async def day_keyboard(
     category_id: int,
     program_id: int
 ) -> InlineKeyboardMarkup:
     CURRENT_LEVEL = 2
+
+    markup = InlineKeyboardMarkup()
+
+    day_list = await service.get_day_list(program_id)
+
+    for day in day_list:
+        callback_data = make_callback_data(
+            level=CURRENT_LEVEL + 1,
+            category=category_id,
+            program=program_id,
+            day=day
+        )
+        markup.insert(
+            InlineKeyboardButton(
+                text=day.capitalize(),
+                callback_data=callback_data
+            )
+        )
+    markup.row(
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=make_callback_data(
+                level=CURRENT_LEVEL - 1,
+                category=category_id
+            )
+        )
+    )
+    return markup
+
+
+async def exercises_all_keyboard(
+    category_id: int,
+    program_id: int,
+    day: str
+) -> InlineKeyboardMarkup:
+    CURRENT_LEVEL = 3
+
+    markup = InlineKeyboardMarkup()
+
+    exercises_day = await service.get_exercises_list(program_id, day)
+
+    for exercises in exercises_day:
+        callback_data = make_callback_data(
+            level=CURRENT_LEVEL + 1,
+            category=category_id,
+            program=program_id,
+            day=day,
+            exercises=exercises.id
+        )
+        markup.row(
+            InlineKeyboardButton(
+                text=exercises.title.capitalize(),
+                callback_data=callback_data
+            )
+        )
+
+    markup.row(
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=make_callback_data(
+                level=CURRENT_LEVEL - 1,
+                category=category_id,
+                program=program_id
+            )
+        )
+    )
+    return markup
+
+
+async def exercises_keyboard(
+    category_id: int,
+    program_id: int,
+    day: str,
+    exercises_id: int
+) -> InlineKeyboardMarkup:
+    CURRENT_LEVEL = 4
 
     markup = InlineKeyboardMarkup()
 
@@ -77,7 +164,9 @@ async def exercises_keyboard(
             text="Назад",
             callback_data=make_callback_data(
                 level=CURRENT_LEVEL - 1,
-                category=category_id
+                category=category_id,
+                program=program_id,
+                day=day
             )
         )
     )
