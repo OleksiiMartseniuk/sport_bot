@@ -31,9 +31,10 @@ async def get_exercises_list(
         query = select(exercises).join(program_exercises).where(
             program_exercises.c.program_id == program_id)
         if day is not None:
-            query = query.where(exercises.c.day == day)
+            query = query.where(exercises.c.day == day).order_by(
+                exercises.c.id)
         else:
-            query = query.order_by(exercises.c.day)
+            query = query.order_by(exercises.c.day, exercises.c.id)
         result = await session.execute(query)
         return [schemas.Exercises(*item) for item in result.fetchall()]
 
