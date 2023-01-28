@@ -31,8 +31,9 @@ exercises = Table(
     Column("title", String, nullable=False),
     Column("number_approaches", Integer),
     Column("number_repetitions", String),
-    Column("day", String),
+    Column("day", Integer),
     Column("image", String),
+    Column("telegram_image_id", String)
 )
 
 
