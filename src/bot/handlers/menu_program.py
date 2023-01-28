@@ -77,11 +77,19 @@ async def list_exercises(
 ):
     markup = await menu_keyboard.exercises_all_keyboard(category, program, day)
     day_text = DAY_WEEK.get(day, "").capitalize()
-    await callback.message.edit_text(
-        f"<b>{day_text}</b>",
-        reply_markup=markup,
-        parse_mode=types.ParseMode.HTML
-    )
+    if callback.message.photo:
+        await callback.message.delete()
+        await callback.message.answer(
+            f"<b>{day_text}</b>",
+            reply_markup=markup,
+            parse_mode=types.ParseMode.HTML
+        )
+    else:
+        await callback.message.edit_text(
+            f"<b>{day_text}</b>",
+            reply_markup=markup,
+            parse_mode=types.ParseMode.HTML
+        )
 
 
 async def get_exercises(
@@ -94,19 +102,36 @@ async def get_exercises(
     markup = await menu_keyboard.exercises_keyboard(
         category, program, day, exercises
     )
-    # TODO fix image
     exercises_data = await service.get_exercises(exercises)
     if exercises_data:
-        text = f"<b>{exercises_data.title.capitalize()}</b>\n"\
+        text = f"<b>{exercises_data.title.capitalize()}</b>\n\n"\
               f"Количество подходов [{exercises_data.number_approaches}]\n"\
-              f"Количество повторений [{exercises_data.number_repetitions}]\n"\
-              f"Image {exercises_data.image}"
-        image = open(f"{MEDIA_ROOT}/{exercises_data.image}", "rb")
-        image_file = types.InputFile(image)
-        logger.info(image_file)
-        print(image_file)
-        media = types.InputMediaPhoto(media=image_file, caption="asdsad")
-        print(media)
+              f"Количество повторений [{exercises_data.number_repetitions}]\n"
+
+        if exercises_data.telegram_image_id:
+            await callback.message.delete()
+            await callback.message.answer_photo(
+                exercises_data.telegram_image_id,
+                caption=text,
+                parse_mode=types.ParseMode.HTML,
+                reply_markup=markup
+            )
+        else:
+            await callback.message.delete()
+            image = open(f"{MEDIA_ROOT}/{exercises_data.image}", "rb")
+            data = await callback.message.answer_photo(
+                image,
+                caption=text,
+                parse_mode=types.ParseMode.HTML,
+                reply_markup=markup
+            )
+            await service.set_telegram_image_id(
+                exercises_id=exercises_data.id,
+                file_id=data.photo[-1].file_id
+            )
+            logger.info("Image %s for exercise %s uploaded to telegram.",
+                        exercises_data.image,
+                        exercises_data.id)
     else:
         logger.error(
             "Not exist exercises [category=%s, program=%s,"
@@ -116,13 +141,10 @@ async def get_exercises(
             day,
             exercises
         )
-        text = "Не найдено упражнения"
-    # await callback.message.answer_photo(media)
-    await callback.message.edit_text(
-        text,
-        reply_markup=markup,
-        parse_mode=types.ParseMode.HTML
-    )
+        await callback.message.edit_text(
+            "Не найдено упражнения",
+            reply_markup=markup
+        )
 
 
 async def navigate(call: types.CallbackQuery, callback_data: dict):
