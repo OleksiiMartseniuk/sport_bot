@@ -21,5 +21,6 @@ class Exercises:
     title: str
     number_approaches: int
     number_repetitions: str
-    day: str
+    day: int
     image: str
+    telegram_image_id: str
