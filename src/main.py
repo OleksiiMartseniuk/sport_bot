@@ -1,9 +1,11 @@
 import logging
 
 from aiogram import Bot, Dispatcher, executor
+from aiogram.contrib.fsm_storage.redis import RedisStorage2
 
 from bot.handlers.menu_program import register_handlers_program
 from bot.handlers.commands import setup_bot_commands
+from bot.middlewares.throttling import ThrottlingMiddleware
 
 from config import TELEGRAM_TOKEN
 
@@ -14,7 +16,11 @@ logging.basicConfig(
     )
 
 bot = Bot(token=TELEGRAM_TOKEN)
-dp = Dispatcher(bot)
+
+dp = Dispatcher(bot, storage=RedisStorage2())
+
+# Setup middleware
+dp.middleware.setup(ThrottlingMiddleware())
 
 # Register Handlers
 register_handlers_program(dp)
