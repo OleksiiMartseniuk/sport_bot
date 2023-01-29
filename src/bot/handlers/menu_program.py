@@ -5,14 +5,16 @@ from collections import defaultdict
 from aiogram import Dispatcher, types
 
 from config import MEDIA_ROOT
-from programs import service
+from programs import db as db_program
 from programs.constants import DAY_WEEK
 from bot.keyboard.inline import menu_keyboard
+from bot.utils import rate_limit
 
 
 logger = logging.getLogger(__name__)
 
 
+@rate_limit(3)
 async def program_start(message: types.Message):
     await list_category(message)
 
@@ -49,7 +51,7 @@ async def list_day(
     **kwargs
 ):
     markup = await menu_keyboard.day_keyboard(category, program)
-    exercises = await service.get_exercises_list(program_id=program)
+    exercises = await db_program.get_exercises_list(program_id=program)
     day_week = defaultdict(list)
     for e in exercises:
         day_week[e.day].append(
@@ -78,6 +80,7 @@ async def list_exercises(
     markup = await menu_keyboard.exercises_all_keyboard(category, program, day)
     day_text = DAY_WEEK.get(day, "").capitalize()
     if callback.message.photo:
+        # TODO check exists massage
         await callback.message.delete()
         await callback.message.answer(
             f"<b>{day_text}</b>",
@@ -102,7 +105,7 @@ async def get_exercises(
     markup = await menu_keyboard.exercises_keyboard(
         category, program, day, exercises
     )
-    exercises_data = await service.get_exercises(exercises)
+    exercises_data = await db_program.get_exercises(exercises)
     if exercises_data:
         text = f"<b>{exercises_data.title.capitalize()}</b>\n\n"\
               f"Количество подходов [{exercises_data.number_approaches}]\n"\
@@ -125,7 +128,7 @@ async def get_exercises(
                 parse_mode=types.ParseMode.HTML,
                 reply_markup=markup
             )
-            await service.set_telegram_image_id(
+            await db_program.set_telegram_image_id(
                 exercises_id=exercises_data.id,
                 file_id=data.photo[-1].file_id
             )
