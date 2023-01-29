@@ -1,7 +1,7 @@
 """init
 
 Revision ID: 2805d8614fbe
-Revises: 
+Revises:
 Create Date: 2023-01-22 19:53:43.663982
 
 """
@@ -28,7 +28,7 @@ def upgrade() -> None:
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('number_approaches', sa.Integer(), nullable=True),
     sa.Column('number_repetitions', sa.String(), nullable=True),
-    sa.Column('day', sa.String(), nullable=True),
+    sa.Column('day', sa.Integer(), nullable=True),
     sa.Column('image', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
