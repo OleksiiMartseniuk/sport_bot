@@ -34,6 +34,7 @@ async def list_category(
         )
     elif isinstance(massage, types.CallbackQuery):
         callback: types.CallbackQuery = massage
+        await callback.answer(cache_time=kwargs.get("cache_time"))
         await callback.message.edit_caption(
             caption=text,
             reply_markup=markup,
@@ -44,8 +45,10 @@ async def list_category(
 async def list_programs(
     callback: types.CallbackQuery,
     category: int,
+    cache_time: int,
     **kwargs
 ):
+    await callback.answer(cache_time=cache_time)
     markup = await menu_keyboard.program_keyboard(category)
     await callback.message.edit_caption(
         caption="<b>Выберите программу:</b>",
@@ -58,8 +61,10 @@ async def list_day(
     callback: types.CallbackQuery,
     category: int,
     program: int,
+    cache_time: int,
     **kwargs
 ):
+    await callback.answer(cache_time=cache_time)
     markup = await menu_keyboard.day_keyboard(category, program)
     exercises = await db_program.get_exercises_list(program_id=program)
     day_week = defaultdict(list)
@@ -85,8 +90,10 @@ async def list_exercises(
     category: int,
     program: int,
     day: int,
+    cache_time: int,
     **kwargs
 ):
+    await callback.answer(cache_time=cache_time)
     markup = await menu_keyboard.exercises_all_keyboard(category, program, day)
     day_text = DAY_WEEK.get(day, "").capitalize()
     media = types.InputMediaPhoto(
@@ -102,8 +109,10 @@ async def get_exercises(
     category: int,
     program: int,
     day: int,
-    exercises: int
+    exercises: int,
+    cache_time: int
 ):
+    await callback.answer(cache_time=cache_time)
     markup = await menu_keyboard.exercises_keyboard(
         category, program, day, exercises
     )
@@ -154,6 +163,8 @@ async def get_exercises(
 
 
 async def navigate(call: types.CallbackQuery, callback_data: dict):
+    CACHE_TIME = 1
+
     current_level = callback_data.get("level", "0")
     category = callback_data.get("category", 0)
     program = callback_data.get("program", 0)
@@ -175,7 +186,8 @@ async def navigate(call: types.CallbackQuery, callback_data: dict):
         category=int(category),
         program=int(program),
         day=int(day),
-        exercises=int(exercises)
+        exercises=int(exercises),
+        cache_time=CACHE_TIME
     )
 
 
