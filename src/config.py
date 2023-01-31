@@ -19,3 +19,4 @@ POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
 # Telegram
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "token")
+MENU_IMAGE_FILE_ID = os.getenv("MENU_IMAGE_FILE_ID", "image")
