@@ -4,15 +4,17 @@ from collections import defaultdict
 
 from aiogram import Dispatcher, types
 
-from config import MEDIA_ROOT
-from programs import service
+from config import MEDIA_ROOT, MENU_IMAGE_FILE_ID
+from programs import db as db_program
 from programs.constants import DAY_WEEK
 from bot.keyboard.inline import menu_keyboard
+from bot.utils import rate_limit
 
 
 logger = logging.getLogger(__name__)
 
 
+@rate_limit(3)
 async def program_start(message: types.Message):
     await list_category(message)
 
@@ -24,10 +26,19 @@ async def list_category(
     markup = await menu_keyboard.category_keyboard()
     text = "Выберите категорию:"
     if isinstance(massage, types.Message):
-        await massage.answer(text, reply_markup=markup)
+        await massage.answer_photo(
+            photo=MENU_IMAGE_FILE_ID,
+            caption=text,
+            parse_mode=types.ParseMode.HTML,
+            reply_markup=markup
+        )
     elif isinstance(massage, types.CallbackQuery):
         callback: types.CallbackQuery = massage
-        await callback.message.edit_text(text, reply_markup=markup)
+        await callback.message.edit_caption(
+            caption=text,
+            reply_markup=markup,
+            parse_mode=types.ParseMode.HTML
+        )
 
 
 async def list_programs(
@@ -36,9 +47,10 @@ async def list_programs(
     **kwargs
 ):
     markup = await menu_keyboard.program_keyboard(category)
-    await callback.message.edit_text(
-        "Выберите программу:",
-        reply_markup=markup
+    await callback.message.edit_caption(
+        caption="<b>Выберите программу:</b>",
+        reply_markup=markup,
+        parse_mode=types.ParseMode.HTML
     )
 
 
@@ -49,7 +61,7 @@ async def list_day(
     **kwargs
 ):
     markup = await menu_keyboard.day_keyboard(category, program)
-    exercises = await service.get_exercises_list(program_id=program)
+    exercises = await db_program.get_exercises_list(program_id=program)
     day_week = defaultdict(list)
     for e in exercises:
         day_week[e.day].append(
@@ -61,8 +73,8 @@ async def list_day(
         text_list.append(f"\n<b>{day_text}</b>")
         text_list.extend(day_week[day])
     text = "\n".join(text_list)
-    await callback.message.edit_text(
-        text,
+    await callback.message.edit_caption(
+        caption=text,
         reply_markup=markup,
         parse_mode=types.ParseMode.HTML
     )
@@ -77,19 +89,12 @@ async def list_exercises(
 ):
     markup = await menu_keyboard.exercises_all_keyboard(category, program, day)
     day_text = DAY_WEEK.get(day, "").capitalize()
-    if callback.message.photo:
-        await callback.message.delete()
-        await callback.message.answer(
-            f"<b>{day_text}</b>",
-            reply_markup=markup,
-            parse_mode=types.ParseMode.HTML
-        )
-    else:
-        await callback.message.edit_text(
-            f"<b>{day_text}</b>",
-            reply_markup=markup,
-            parse_mode=types.ParseMode.HTML
-        )
+    media = types.InputMediaPhoto(
+        media=MENU_IMAGE_FILE_ID,
+        caption=f"<b>{day_text}</b>",
+        parse_mode=types.ParseMode.HTML
+    )
+    await callback.message.edit_media(media=media, reply_markup=markup)
 
 
 async def get_exercises(
@@ -102,34 +107,35 @@ async def get_exercises(
     markup = await menu_keyboard.exercises_keyboard(
         category, program, day, exercises
     )
-    exercises_data = await service.get_exercises(exercises)
+    exercises_data = await db_program.get_exercises(exercises)
     if exercises_data:
         text = f"<b>{exercises_data.title.capitalize()}</b>\n\n"\
               f"Количество подходов [{exercises_data.number_approaches}]\n"\
               f"Количество повторений [{exercises_data.number_repetitions}]\n"
 
         if exercises_data.telegram_image_id:
-            await callback.message.delete()
-            await callback.message.answer_photo(
-                exercises_data.telegram_image_id,
+            media = types.InputMediaPhoto(
+                media=exercises_data.telegram_image_id,
                 caption=text,
-                parse_mode=types.ParseMode.HTML,
-                reply_markup=markup
+                parse_mode=types.ParseMode.HTML
             )
+            await callback.message.edit_media(media=media, reply_markup=markup)
         else:
-            await callback.message.delete()
             image = open(f"{MEDIA_ROOT}/{exercises_data.image}", "rb")
-            data = await callback.message.answer_photo(
-                image,
+            media = types.InputMediaPhoto(
+                media=image,
                 caption=text,
-                parse_mode=types.ParseMode.HTML,
+                parse_mode=types.ParseMode.HTML
+            )
+            data = await callback.message.edit_media(
+                media=media,
                 reply_markup=markup
             )
-            await service.set_telegram_image_id(
+            await db_program.set_telegram_image_id(
                 exercises_id=exercises_data.id,
                 file_id=data.photo[-1].file_id
             )
-            logger.info("Image %s for exercise %s uploaded to telegram.",
+            logger.info("Image %s for exercise (id:%s) uploaded to telegram.",
                         exercises_data.image,
                         exercises_data.id)
     else:

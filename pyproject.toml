@@ -13,6 +13,7 @@ sqlalchemy = "^1.4.46"
 alembic = "^1.9.2"
 asyncpg = "^0.27.0"
 aiogram = "^2.24"
+redis = "^4.4.2"
 
 
 [tool.poetry.group.dev.dependencies]

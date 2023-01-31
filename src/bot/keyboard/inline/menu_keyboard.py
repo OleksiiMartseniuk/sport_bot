@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
-from programs import service
+from programs import db as db_program
 from programs.constants import DAY_WEEK
 
 
@@ -36,7 +36,7 @@ async def category_keyboard() -> InlineKeyboardMarkup:
 
     markup = InlineKeyboardMarkup()
 
-    categories = await service.get_category_list()
+    categories = await db_program.get_category_list()
 
     for category in categories:
         text = f"{category.title.capitalize()}"
@@ -56,7 +56,7 @@ async def program_keyboard(category_id: int) -> InlineKeyboardMarkup:
 
     markup = InlineKeyboardMarkup()
 
-    programs = await service.get_programs_list(category_id)
+    programs = await db_program.get_programs_list(category_id)
 
     for program in programs:
         text = f"{program.title.capitalize()}"
@@ -85,7 +85,7 @@ async def day_keyboard(
 
     markup = InlineKeyboardMarkup()
 
-    day_list = await service.get_day_list(program_id)
+    day_list = await db_program.get_day_list(program_id)
 
     for day in day_list:
         callback_data = make_callback_data(
@@ -121,7 +121,7 @@ async def exercises_all_keyboard(
 
     markup = InlineKeyboardMarkup()
 
-    exercises_day = await service.get_exercises_list(program_id, day)
+    exercises_day = await db_program.get_exercises_list(program_id, day)
 
     for exercises in exercises_day:
         callback_data = make_callback_data(
