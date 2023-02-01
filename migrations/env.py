@@ -19,7 +19,7 @@ from src.config import (
 )
 from src.programs.models import metadata as metadata_programs
 from src.user.models import metadata as metadata_user
-from src.statistics.models import metadata as metadata_statistics
+from src.statistic.models import metadata as metadata_statistics
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
