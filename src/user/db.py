@@ -23,8 +23,9 @@ async def create_user(
         await session.commit()
 
 
-async def get_user(telegram_id: str) -> schemas.User | None:
+async def get_user(telegram_id: int) -> schemas.User | None:
     query = select(user).where(user.c.telegram_id == telegram_id)
-    result = await session.execute(query)
-    user_data = result.fetchone()
-    return schemas.User(*user_data) if user else None
+    async with async_session() as session:
+        result = await session.execute(query)
+        user_data = result.fetchone()
+        return schemas.User(*user_data) if user_data else None
