@@ -6,6 +6,7 @@ from aiogram import Dispatcher, types
 
 from config import MEDIA_ROOT, MENU_IMAGE_FILE_ID
 from programs import db as db_program
+from statistic.service import set_statistics_program
 from programs.constants import DAY_WEEK
 from bot.keyboard.inline import menu_keyboard
 from bot.utils import rate_limit
@@ -65,12 +66,16 @@ async def list_day(
     **kwargs
 ):
     await callback.answer(cache_time=cache_time)
-    markup = await menu_keyboard.day_keyboard(category, program)
+    markup = await menu_keyboard.day_keyboard(
+        category_id=category,
+        program_id=program,
+        user_id=callback.from_user.id
+    )
     exercises = await db_program.get_exercises_list(program_id=program)
     day_week = defaultdict(list)
     for e in exercises:
         day_week[e.day].append(
-            f"⸰ {e.title} - {e.number_approaches} - [{e.number_repetitions}]"
+            f"⸰ {e.title}"
         )
     text_list = []
     for day in day_week:
@@ -118,9 +123,11 @@ async def get_exercises(
     )
     exercises_data = await db_program.get_exercises(exercises)
     if exercises_data:
+        approaches = exercises_data.number_approaches
+        repetitions = exercises_data.number_repetitions
         text = f"<b>{exercises_data.title.capitalize()}</b>\n\n"\
-              f"Количество подходов [{exercises_data.number_approaches}]\n"\
-              f"Количество повторений [{exercises_data.number_repetitions}]\n"
+              f"Количество подходов [<b>{approaches}</b>]\n"\
+              f"Количество повторений [<b>{repetitions}</b>]\n"
 
         if exercises_data.telegram_image_id:
             media = types.InputMediaPhoto(
@@ -191,9 +198,33 @@ async def navigate(call: types.CallbackQuery, callback_data: dict):
     )
 
 
+async def subscribe_program(call: types.CallbackQuery, callback_data: dict):
+    await call.answer(cache_time=2)
+
+    user_id = int(callback_data.get("user", 0))
+    program_id = int(callback_data.get("program", 0))
+    category_id = int(callback_data.get("category", 0))
+
+    await set_statistics_program(
+        telegram_user_id=user_id,
+        program_id=program_id
+    )
+
+    markup = await menu_keyboard.day_keyboard(
+        category_id=category_id,
+        program_id=program_id,
+        user_id=user_id
+    )
+    await call.message.edit_reply_markup(reply_markup=markup)
+
+
 def register_handlers_program(dp: Dispatcher):
     dp.register_message_handler(program_start, commands="program")
     dp.register_callback_query_handler(
         navigate,
         menu_keyboard.menu_cd.filter()
+    )
+    dp.register_callback_query_handler(
+        subscribe_program,
+        menu_keyboard.subscribe_program.filter()
     )
