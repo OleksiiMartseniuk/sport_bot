@@ -1,8 +1,9 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
-from programs import db as db_program
 from programs.constants import DAY_WEEK
+from programs import db as db_program
+from statistic.service import check_active_statistics_program
 
 
 menu_cd = CallbackData(
@@ -12,6 +13,12 @@ menu_cd = CallbackData(
     "program",
     "day",
     "exercises"
+)
+subscribe_program = CallbackData(
+    "subscribe_program",
+    "user",
+    "program",
+    "category"
 )
 
 
@@ -79,12 +86,17 @@ async def program_keyboard(category_id: int) -> InlineKeyboardMarkup:
 
 async def day_keyboard(
     category_id: int,
-    program_id: int
+    program_id: int,
+    user_id: int
 ) -> InlineKeyboardMarkup:
     CURRENT_LEVEL = 2
 
     markup = InlineKeyboardMarkup()
-
+    statistic_program = await check_active_statistics_program(
+        telegram_user_id=user_id,
+        program_id=program_id
+    )
+    text_subscribe = "Отписаться" if statistic_program else "Подписаться"
     day_list = await db_program.get_day_list(program_id)
 
     for day in day_list:
@@ -100,6 +112,17 @@ async def day_keyboard(
                 callback_data=callback_data
             )
         )
+    markup.row(
+        InlineKeyboardButton(
+            text=text_subscribe,
+            callback_data=subscribe_program.new(
+                user=user_id,
+                program=program_id,
+                category=category_id
+            )
+        )
+    )
+
     markup.row(
         InlineKeyboardButton(
             text="Назад",
