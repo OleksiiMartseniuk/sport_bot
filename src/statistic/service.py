@@ -2,44 +2,69 @@ import logging
 
 from datetime import datetime
 
-from . import db
+from user import db as user_db
+
+from . import db as statistic_db
 
 
 logger = logging.getLogger(__name__)
 
 
 async def set_statistics_program(
-    user_id: int,
+    telegram_user_id: int,
     program_id: int,
-    start_time: datetime = datetime.now()
+    start_time: datetime = datetime.now(),
 ) -> None:
-    statistics_program = await db.get_active_statistics_program(
-        user_id=user_id
+    user = await user_db.get_user(telegram_id=telegram_user_id)
+    if not user:
+        logger.error("User telegram id %s not exist.", telegram_user_id)
+        return
+
+    statistics_program = await statistic_db.get_active_statistics_program(
+        user_id=user.id
     )
     if statistics_program:
         if statistics_program.program_id == program_id:
-            logger.warning(
-                "User %s trying to change the program to the current one",
-                user_id
+            await statistic_db.end_statistics_program(
+                statistics_program_id=statistics_program.id
+            )
+            logger.info(
+                "User %s ending program %s",
+                user.id,
+                program_id
             )
             return
         else:
-            await db.end_statistics_program(
+            await statistic_db.end_statistics_program(
                 statistics_program_id=statistics_program.id
             )
-            await db.start_statistics_program(
-                user_id=user_id,
+            await statistic_db.start_statistics_program(
+                user_id=user.id,
                 program_id=program_id,
                 start_time=start_time
             )
     else:
-        await db.start_statistics_program(
-            user_id=user_id,
+        await statistic_db.start_statistics_program(
+            user_id=user.id,
             program_id=program_id,
             start_time=start_time
         )
     logger.info(
         "User %s installed program %s",
-        user_id,
+        user.id,
         program_id
+    )
+
+
+async def check_active_statistics_program(
+    telegram_user_id: int,
+    program_id: int
+):
+    user = await user_db.get_user(telegram_id=telegram_user_id)
+    if not user:
+        logger.error("User telegram id %s not exist.", telegram_user_id)
+        return
+    return await statistic_db.check_active_statistics_program(
+        user_id=user.id,
+        program_id=program_id
     )
