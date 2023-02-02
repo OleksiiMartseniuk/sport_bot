@@ -48,3 +48,20 @@ async def get_active_statistics_program(
         result = await session.execute(query)
         item = result.fetchone()
         return schemas.StatisticsProgram(*item) if item else None
+
+
+async def check_active_statistics_program(
+    user_id: int,
+    program_id: int
+) -> schemas.StatisticsProgram | None:
+    query = select(statistics_program).where(
+        and_(
+            statistics_program.c.user_id == user_id,
+            statistics_program.c.program_id == program_id,
+            statistics_program.c.finish_time == None
+        )
+    )
+    async with async_session() as session:
+        result = await session.execute(query)
+        item = result.fetchone()
+        return schemas.StatisticsProgram(*item) if item else None
