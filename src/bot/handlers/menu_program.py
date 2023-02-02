@@ -126,8 +126,8 @@ async def get_exercises(
         approaches = exercises_data.number_approaches
         repetitions = exercises_data.number_repetitions
         text = f"<b>{exercises_data.title.capitalize()}</b>\n\n"\
-              f"Количество подходов [<b>{approaches}</b>]\n"\
-              f"Количество повторений [<b>{repetitions}</b>]\n"
+               f"Количество подходов [<b>{approaches}</b>]\n"\
+               f"Количество повторений [<b>{repetitions}</b>]\n"
 
         if exercises_data.telegram_image_id:
             media = types.InputMediaPhoto(
