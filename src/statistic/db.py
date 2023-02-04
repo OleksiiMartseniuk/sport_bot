@@ -1,10 +1,11 @@
 from datetime import datetime
 
 from sqlalchemy import insert, update, select, and_
+from sqlalchemy import func
 
 from database import async_session
 
-from .models import statistics_program
+from .models import statistics_program, statistics_exercises
 from . import schemas
 
 
@@ -65,3 +66,38 @@ async def check_active_statistics_program(
         result = await session.execute(query)
         item = result.fetchone()
         return schemas.StatisticsProgram(*item) if item else None
+
+
+async def insert_statistics_exercises(
+    statistics_program_id: int,
+    exercises_id: int,
+    done: bool,
+    created: datetime = datetime.now()
+) -> None:
+    query = insert(statistics_exercises).values(
+        statistics_program_id=statistics_program_id,
+        exercises_id=exercises_id,
+        done=done,
+        created=created
+    )
+    async with async_session() as session:
+        await session.execute(query)
+        await session.commit()
+
+
+async def get_statistics_exercises(
+    statistics_program_id: int,
+    exercises_id: int,
+    created_filter: datetime = datetime.now()
+) -> schemas.StatisticsExercises | None:
+    query = select(statistics_exercises).where(
+        and_(
+            statistics_exercises.c.statistics_program_id == statistics_program_id,
+            statistics_exercises.c.exercises_id == exercises_id,
+            func.DATE(statistics_exercises.c.created) == created_filter.date()
+        )
+    )
+    async with async_session() as session:
+        result = await session.execute(query)
+        item = result.fetchone()
+        return schemas.StatisticsExercises(*item) if item else None
