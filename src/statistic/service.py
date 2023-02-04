@@ -66,3 +66,35 @@ async def check_active_statistics_program(
         user_id=user.id,
         program_id=program_id
     )
+
+
+async def set_statistics_exercises(
+    telegram_user_id: int,
+    program_id: int,
+    exercises_id: int,
+    done: bool,
+    created: datetime = datetime.now()
+):
+    user = await user_db.get_user(telegram_id=telegram_user_id)
+    if not user:
+        return
+
+    statistics_program = await statistic_db.check_active_statistics_program(
+        user_id=user.id,
+        program_id=program_id
+    )
+
+    if not statistics_program:
+        logger.error(
+            "Not fund statistics_program user_id %s program_id %s",
+            user.id,
+            program_id
+        )
+        return
+
+    await statistic_db.insert_statistics_exercises(
+        statistics_program_id=statistics_program.id,
+        exercises_id=exercises_id,
+        done=done,
+        created=created
+    )
