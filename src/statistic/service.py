@@ -17,7 +17,6 @@ async def set_statistics_program(
 ) -> None:
     user = await user_db.get_user(telegram_id=telegram_user_id)
     if not user:
-        logger.error("User telegram id %s not exist.", telegram_user_id)
         return
 
     statistics_program = await statistic_db.get_active_statistics_program(
@@ -62,7 +61,6 @@ async def check_active_statistics_program(
 ):
     user = await user_db.get_user(telegram_id=telegram_user_id)
     if not user:
-        logger.error("User telegram id %s not exist.", telegram_user_id)
         return
     return await statistic_db.check_active_statistics_program(
         user_id=user.id,
