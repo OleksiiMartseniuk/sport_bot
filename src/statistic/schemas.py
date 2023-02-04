@@ -9,3 +9,12 @@ class StatisticsProgram:
     program_id: int
     start_time: datetime
     finish_time: datetime
+
+
+@dataclass
+class StatisticsExercises:
+    id: int
+    statistics_program_id: int
+    exercises_id: int
+    done: bool
+    created: datetime
