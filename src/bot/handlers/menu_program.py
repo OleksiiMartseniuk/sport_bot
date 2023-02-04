@@ -6,6 +6,8 @@ from aiogram import Dispatcher, types
 
 from config import MEDIA_ROOT, MENU_IMAGE_FILE_ID
 from programs import db as db_program
+from statistic import db as db_statistic
+from statistic.service import set_statistics_program
 from programs.constants import DAY_WEEK
 from bot.keyboard.inline import menu_keyboard
 from bot.utils import rate_limit
@@ -34,6 +36,7 @@ async def list_category(
         )
     elif isinstance(massage, types.CallbackQuery):
         callback: types.CallbackQuery = massage
+        await callback.answer(cache_time=kwargs.get("cache_time"))
         await callback.message.edit_caption(
             caption=text,
             reply_markup=markup,
@@ -44,8 +47,10 @@ async def list_category(
 async def list_programs(
     callback: types.CallbackQuery,
     category: int,
+    cache_time: int,
     **kwargs
 ):
+    await callback.answer(cache_time=cache_time)
     markup = await menu_keyboard.program_keyboard(category)
     await callback.message.edit_caption(
         caption="<b>Выберите программу:</b>",
@@ -58,14 +63,20 @@ async def list_day(
     callback: types.CallbackQuery,
     category: int,
     program: int,
+    cache_time: int,
     **kwargs
 ):
-    markup = await menu_keyboard.day_keyboard(category, program)
+    await callback.answer(cache_time=cache_time)
+    markup = await menu_keyboard.day_keyboard(
+        category_id=category,
+        program_id=program,
+        user_id=callback.from_user.id
+    )
     exercises = await db_program.get_exercises_list(program_id=program)
     day_week = defaultdict(list)
     for e in exercises:
         day_week[e.day].append(
-            f"⸰ {e.title} - {e.number_approaches} - [{e.number_repetitions}]"
+            f"⸰ {e.title}"
         )
     text_list = []
     for day in day_week:
@@ -85,8 +96,10 @@ async def list_exercises(
     category: int,
     program: int,
     day: int,
+    cache_time: int,
     **kwargs
 ):
+    await callback.answer(cache_time=cache_time)
     markup = await menu_keyboard.exercises_all_keyboard(category, program, day)
     day_text = DAY_WEEK.get(day, "").capitalize()
     media = types.InputMediaPhoto(
@@ -102,16 +115,20 @@ async def get_exercises(
     category: int,
     program: int,
     day: int,
-    exercises: int
+    exercises: int,
+    cache_time: int
 ):
+    await callback.answer(cache_time=cache_time)
     markup = await menu_keyboard.exercises_keyboard(
-        category, program, day, exercises
+        category, program, day, exercises, callback.from_user.id
     )
     exercises_data = await db_program.get_exercises(exercises)
     if exercises_data:
+        approaches = exercises_data.number_approaches
+        repetitions = exercises_data.number_repetitions
         text = f"<b>{exercises_data.title.capitalize()}</b>\n\n"\
-              f"Количество подходов [{exercises_data.number_approaches}]\n"\
-              f"Количество повторений [{exercises_data.number_repetitions}]\n"
+               f"Количество подходов [<b>{approaches}</b>]\n"\
+               f"Количество повторений [<b>{repetitions}</b>]\n"
 
         if exercises_data.telegram_image_id:
             media = types.InputMediaPhoto(
@@ -154,6 +171,8 @@ async def get_exercises(
 
 
 async def navigate(call: types.CallbackQuery, callback_data: dict):
+    CACHE_TIME = 1
+
     current_level = callback_data.get("level", "0")
     category = callback_data.get("category", 0)
     program = callback_data.get("program", 0)
@@ -175,8 +194,56 @@ async def navigate(call: types.CallbackQuery, callback_data: dict):
         category=int(category),
         program=int(program),
         day=int(day),
-        exercises=int(exercises)
+        exercises=int(exercises),
+        cache_time=CACHE_TIME
     )
+
+
+async def subscribe_program(call: types.CallbackQuery, callback_data: dict):
+    await call.answer(cache_time=2)
+
+    user_id = int(callback_data.get("user", 0))
+    program_id = int(callback_data.get("program", 0))
+    category_id = int(callback_data.get("category", 0))
+
+    await set_statistics_program(
+        telegram_user_id=user_id,
+        program_id=program_id
+    )
+
+    markup = await menu_keyboard.day_keyboard(
+        category_id=category_id,
+        program_id=program_id,
+        user_id=user_id
+    )
+    await call.message.edit_reply_markup(reply_markup=markup)
+
+
+async def exercise_execution(call: types.CallbackQuery, callback_data: dict):
+    await call.answer(cache_time=1)
+
+    done = callback_data.get("done", 0)
+    category = callback_data.get("category", 0)
+    program = callback_data.get("program", 0)
+    day = callback_data.get("day", 0)
+    exercises = callback_data.get("exercises", 0)
+    statistics_program = callback_data.get("statistics_program", 0)
+
+    await db_statistic.insert_statistics_exercises(
+        statistics_program_id=int(statistics_program),
+        exercises_id=int(exercises),
+        done=bool(int(done))
+    )
+
+    markup = await menu_keyboard.exercises_keyboard(
+        category_id=int(category),
+        program_id=int(program),
+        day=int(day),
+        exercises_id=int(exercises),
+        user_id=call.from_user.id
+    )
+
+    await call.message.edit_reply_markup(reply_markup=markup)
 
 
 def register_handlers_program(dp: Dispatcher):
@@ -184,4 +251,12 @@ def register_handlers_program(dp: Dispatcher):
     dp.register_callback_query_handler(
         navigate,
         menu_keyboard.menu_cd.filter()
+    )
+    dp.register_callback_query_handler(
+        subscribe_program,
+        menu_keyboard.subscribe_program.filter()
+    )
+    dp.register_callback_query_handler(
+        exercise_execution,
+        menu_keyboard.exercise_execution.filter()
     )

@@ -1,8 +1,8 @@
-from sqlalchemy import select, update
+from sqlalchemy import select, update, insert
 
 from database import async_session
-from programs.models import category, program, exercises, program_exercises
 
+from .models import category, program, exercises, program_exercises
 from . import schemas
 
 
@@ -12,15 +12,27 @@ async def get_category_list() -> list[schemas.Category]:
         return [schemas.Category(*item) for item in result.fetchall()]
 
 
+async def get_category(title: str) -> schemas.Category | None:
+    query = select(category).where(category.c.title == title)
+    async with async_session() as session:
+        result = await session.execute(query)
+        category_data = result.fetchone()
+        return schemas.Category(*category_data) if category_data else None
+
+
 async def get_programs_list(category_id: int) -> list[schemas.Program]:
     async with async_session() as session:
-        query = select(
-            program.c.id,
-            program.c.title,
-            program.c.created
-        ).where(program.c.category_id == category_id)
+        query = select(program).where(program.c.category_id == category_id)
         result = await session.execute(query)
         return [schemas.Program(*item) for item in result.fetchall()]
+
+
+async def get_program(title: str) -> schemas.Program | None:
+    query = select(program).where(program.c.title == title)
+    async with async_session() as session:
+        result = await session.execute(query)
+        program_data = result.fetchone()
+        return schemas.Program(*program_data) if program_data else None
 
 
 async def get_exercises_list(
@@ -61,5 +73,56 @@ async def set_telegram_image_id(exercises_id: int, file_id: str) -> None:
         query = update(exercises).where(exercises.c.id == exercises_id).values(
             telegram_image_id=file_id
         )
+        await session.execute(query)
+        await session.commit()
+
+
+async def insert_category(title: str) -> int:
+    query = insert(category).returning(category.c.id).values(title=title)
+    async with async_session() as session:
+        result = await session.execute(query)
+        await session.commit()
+        return result.fetchone()[0]
+
+
+async def insert_program(title: str, category_id: int) -> int:
+    query = insert(program).returning(program.c.id).values(
+        title=title, category_id=category_id
+    )
+    async with async_session() as session:
+        result = await session.execute(query)
+        await session.commit()
+        return result.fetchone()[0]
+
+
+async def insert_exercise(
+    title: str,
+    number_approaches: int,
+    number_repetitions: str,
+    day: int,
+    image: str,
+) -> int:
+    query = insert(exercises).returning(exercises.c.id).values(
+        title=title,
+        number_approaches=number_approaches,
+        number_repetitions=number_repetitions,
+        day=day,
+        image=image
+    )
+    async with async_session() as session:
+        result = await session.execute(query)
+        await session.commit()
+        return result.fetchone()[0]
+
+
+async def insert_program_exercise(
+    program_id: int,
+    exercises_id: int
+) -> None:
+    query = insert(program_exercises).values(
+        program_id=program_id,
+        exercises_id=exercises_id
+    )
+    async with async_session() as session:
         await session.execute(query)
         await session.commit()

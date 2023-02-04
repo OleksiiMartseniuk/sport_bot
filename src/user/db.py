@@ -1,9 +1,14 @@
+import logging
+
 from sqlalchemy import insert, select
 
 from database import async_session
 
 from .models import user
 from . import schemas
+
+
+logger = logging.getLogger(__name__)
 
 
 async def create_user(
@@ -23,8 +28,13 @@ async def create_user(
         await session.commit()
 
 
-async def get_user(telegram_id: str) -> schemas.User | None:
+async def get_user(telegram_id: int) -> schemas.User | None:
     query = select(user).where(user.c.telegram_id == telegram_id)
-    result = await session.execute(query)
-    user_data = result.fetchone()
-    return schemas.User(*user_data) if user else None
+    async with async_session() as session:
+        result = await session.execute(query)
+        user_data = result.fetchone()
+        if user_data:
+            return schemas.User(*user_data)
+        else:
+            logger.error("User telegram id %s not exist.", telegram_id)
+            return None

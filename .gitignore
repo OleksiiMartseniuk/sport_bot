@@ -4,3 +4,5 @@ training_program.md
 .vscode
 .env
 __pycache__
+.idea
+program_data.csv
