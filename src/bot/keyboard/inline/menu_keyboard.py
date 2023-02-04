@@ -1,8 +1,11 @@
+from datetime import datetime
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
 from programs.constants import DAY_WEEK
 from programs import db as db_program
+from statistic import db as db_statistic
 from statistic.service import check_active_statistics_program
 
 
@@ -19,6 +22,16 @@ subscribe_program = CallbackData(
     "user",
     "program",
     "category"
+)
+exercise_execution = CallbackData(
+    "exercise_execution",
+    "done",
+    "category",
+    "program",
+    "statistics_program",
+    "day",
+    "exercises"
+
 )
 
 
@@ -178,12 +191,52 @@ async def exercises_keyboard(
     category_id: int,
     program_id: int,
     day: int,
-    exercises_id: int
+    exercises_id: int,
+    user_id: int
 ) -> InlineKeyboardMarkup:
     CURRENT_LEVEL = 4
 
     markup = InlineKeyboardMarkup()
 
+    date_now = datetime.now()
+
+    active_program = await check_active_statistics_program(
+        telegram_user_id=user_id,
+        program_id=program_id
+    )
+
+    if active_program:
+        active_exercises = await db_statistic.get_statistics_exercises(
+            statistics_program_id=active_program.id,
+            exercises_id=exercises_id
+        )
+        if not active_exercises and date_now.weekday() == day:
+            markup.insert(
+                InlineKeyboardButton(
+                    "❌ Провалено",
+                    callback_data=exercise_execution.new(
+                        done=0,
+                        category=category_id,
+                        program=program_id,
+                        statistics_program=active_program.id,
+                        day=day,
+                        exercises=exercises_id
+                    )
+                )
+            )
+            markup.insert(
+                InlineKeyboardButton(
+                    "✅ Выполнено",
+                    callback_data=exercise_execution.new(
+                        done=1,
+                        category=category_id,
+                        program=program_id,
+                        statistics_program=active_program.id,
+                        day=day,
+                        exercises=exercises_id
+                    )
+                )
+            )
     markup.row(
         InlineKeyboardButton(
             text="Назад",
