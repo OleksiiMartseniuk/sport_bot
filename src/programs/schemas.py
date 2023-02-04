@@ -13,6 +13,7 @@ class Program:
     id: int
     title: str
     created: datetime
+    category_id: int
 
 
 @dataclass
