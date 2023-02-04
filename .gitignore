@@ -5,3 +5,4 @@ training_program.md
 .env
 __pycache__
 .idea
+program_data.csv
