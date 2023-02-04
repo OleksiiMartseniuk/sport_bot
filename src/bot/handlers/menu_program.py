@@ -6,6 +6,7 @@ from aiogram import Dispatcher, types
 
 from config import MEDIA_ROOT, MENU_IMAGE_FILE_ID
 from programs import db as db_program
+from statistic import db as db_statistic
 from statistic.service import set_statistics_program
 from programs.constants import DAY_WEEK
 from bot.keyboard.inline import menu_keyboard
@@ -119,7 +120,7 @@ async def get_exercises(
 ):
     await callback.answer(cache_time=cache_time)
     markup = await menu_keyboard.exercises_keyboard(
-        category, program, day, exercises
+        category, program, day, exercises, callback.from_user.id
     )
     exercises_data = await db_program.get_exercises(exercises)
     if exercises_data:
@@ -218,6 +219,33 @@ async def subscribe_program(call: types.CallbackQuery, callback_data: dict):
     await call.message.edit_reply_markup(reply_markup=markup)
 
 
+async def exercise_execution(call: types.CallbackQuery, callback_data: dict):
+    await call.answer(cache_time=1)
+
+    done = callback_data.get("done", 0)
+    category = callback_data.get("category", 0)
+    program = callback_data.get("program", 0)
+    day = callback_data.get("day", 0)
+    exercises = callback_data.get("exercises", 0)
+    statistics_program = callback_data.get("statistics_program", 0)
+
+    await db_statistic.insert_statistics_exercises(
+        statistics_program_id=int(statistics_program),
+        exercises_id=int(exercises),
+        done=bool(int(done))
+    )
+
+    markup = await menu_keyboard.exercises_keyboard(
+        category_id=int(category),
+        program_id=int(program),
+        day=int(day),
+        exercises_id=int(exercises),
+        user_id=call.from_user.id
+    )
+
+    await call.message.edit_reply_markup(reply_markup=markup)
+
+
 def register_handlers_program(dp: Dispatcher):
     dp.register_message_handler(program_start, commands="program")
     dp.register_callback_query_handler(
@@ -227,4 +255,8 @@ def register_handlers_program(dp: Dispatcher):
     dp.register_callback_query_handler(
         subscribe_program,
         menu_keyboard.subscribe_program.filter()
+    )
+    dp.register_callback_query_handler(
+        exercise_execution,
+        menu_keyboard.exercise_execution.filter()
     )
