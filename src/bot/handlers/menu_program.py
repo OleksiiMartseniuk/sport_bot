@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime
 from collections import defaultdict
 
 from aiogram import Dispatcher, types
@@ -229,10 +230,12 @@ async def exercise_execution(call: types.CallbackQuery, callback_data: dict):
     exercises = callback_data.get("exercises", 0)
     statistics_program = callback_data.get("statistics_program", 0)
 
+    created = datetime.now()
     await db_statistic.insert_statistics_exercises(
         statistics_program_id=int(statistics_program),
         exercises_id=int(exercises),
-        done=bool(int(done))
+        done=bool(int(done)),
+        created=created
     )
 
     markup = await menu_keyboard.exercises_keyboard(
