@@ -27,8 +27,17 @@ async def get_programs_list(category_id: int) -> list[schemas.Program]:
         return [schemas.Program(*item) for item in result.fetchall()]
 
 
-async def get_program(title: str) -> schemas.Program | None:
-    query = select(program).where(program.c.title == title)
+async def get_program(
+        id: int | None = None,
+        title: str | None = None
+) -> schemas.Program | None:
+    if id:
+        query = select(program).where(program.c.id == id)
+    elif title:
+        query = select(program).where(program.c.title == title)
+    else:
+        return None
+
     async with async_session() as session:
         result = await session.execute(query)
         program_data = result.fetchone()
