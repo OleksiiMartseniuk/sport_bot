@@ -8,5 +8,9 @@ async def setup_bot_commands(bot: Bot):
             command="/program",
             description="Выберите программу тренировок"
         ),
+        BotCommand(
+            command="/statistic",
+            description="Статистика"
+        ),
     ]
     await bot.set_my_commands(bot_commands)
