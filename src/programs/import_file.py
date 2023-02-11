@@ -1,5 +1,9 @@
 import csv
 import logging
+import requests
+import uuid
+
+from config import MEDIA_ROOT
 
 from . import db
 
@@ -38,6 +42,14 @@ async def process_import(file_path: str):
         if not all(required_fields):
             logger.error(f"Item index {index} missing required fields")
 
+        image_file_name = download_image(row_data['exercise_image'])
+        if not image_file_name:
+            logger.error(
+                "Exercise %s not write erorr image",
+                row_data['exercise_tile']
+            )
+            continue
+
         category = await db.get_category(title=row_data["category_title"])
         if category:
             category_id = category.id
@@ -60,7 +72,7 @@ async def process_import(file_path: str):
             number_approaches=int(row_data["exercise_number_approaches"]),
             number_repetitions=row_data["exercise_number_repetitions"],
             day=int(row_data["exercise_day"]),
-            image=row_data["exercise_image"]
+            image=image_file_name
         )
 
         await db.insert_program_exercise(
@@ -70,3 +82,24 @@ async def process_import(file_path: str):
 
     logger.info("Data fro file write to database")
     file.close()
+
+
+def download_image(url: str) -> str | None:
+    try:
+        res = requests.get(url=url, stream=True)
+        if res.status_code == 200:
+            file_name = f"{uuid.uuid4()}.jpg"
+            with open(f"{MEDIA_ROOT}/{file_name}", 'wb') as f:
+                for chunk in res:
+                    f.write(chunk)
+        else:
+            logger.error(
+                "Error download image %s status_code %s",
+                url,
+                res.status_code
+            )
+            return None
+    except Exception as e:
+        logger.error("Error download image %s massage %s", url, str(e))
+    else:
+        return file_name
