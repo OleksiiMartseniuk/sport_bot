@@ -2,7 +2,7 @@ from sqlalchemy import select, update, insert
 
 from database import async_session
 
-from .models import category, program, exercises, program_exercises
+from .models import category, program, exercises, program_exercises, file
 from . import schemas
 
 
@@ -60,9 +60,18 @@ async def get_exercises_list(
         return [schemas.Exercises(*item) for item in result.fetchall()]
 
 
-async def get_exercises(exercises_id: int) -> schemas.Exercises | None:
-    async with async_session() as session:
+async def get_exercises(
+    exercises_id: int | None = None,
+    exercises_title: int | None = None
+) -> schemas.Exercises | None:
+    if exercises_id:
         query = select(exercises).where(exercises.c.id == exercises_id)
+    elif exercises_title:
+        query = select(exercises).where(exercises.c.title == exercises_title)
+    else:
+        return None
+
+    async with async_session() as session:
         result = await session.execute(query)
         item = result.fetchone()
         return schemas.Exercises(*item) if item else None
@@ -131,6 +140,17 @@ async def insert_program_exercise(
     query = insert(program_exercises).values(
         program_id=program_id,
         exercises_id=exercises_id
+    )
+    async with async_session() as session:
+        await session.execute(query)
+        await session.commit()
+
+
+async def insert_file(user_id: int, file_name: str, done: bool) -> None:
+    query = insert(file).values(
+        user_id=user_id,
+        file_name=file_name,
+        done=done
     )
     async with async_session() as session:
         await session.execute(query)
