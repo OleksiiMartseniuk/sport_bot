@@ -1,7 +1,9 @@
 from sqlalchemy import (
-    Table, Column, Integer, String, DateTime, ForeignKey, MetaData
+    Table, Column, Integer, String, DateTime, ForeignKey, MetaData, Boolean
 )
 from sqlalchemy.sql import func
+
+from user.models import user
 
 
 metadata = MetaData()
@@ -42,4 +44,14 @@ program_exercises = Table(
     metadata,
     Column("program_id", ForeignKey("programs.id")),
     Column("exercises_id", ForeignKey("exercises.id")),
+)
+
+
+file = Table(
+    "files",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, ForeignKey(user.c.id), nullable=False),
+    Column("file_name", String),
+    Column("done", Boolean),
 )
