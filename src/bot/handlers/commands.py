@@ -12,5 +12,14 @@ async def setup_bot_commands(bot: Bot):
             command="/statistic",
             description="Статистика"
         ),
+        BotCommand(
+            command="/import_file",
+            description="Импорт файла"
+
+        ),
+        BotCommand(
+            command="/cancel",
+            description="Отменить текущее действие"
+        ),
     ]
     await bot.set_my_commands(bot_commands)
