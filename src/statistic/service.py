@@ -1,9 +1,13 @@
 import logging
 
+from collections import defaultdict
 from datetime import datetime
 
 from user import db as user_db
+from programs import db as program_db
+from programs.schemas import DAYS_WEEK
 
+from .schemas import StatisticsExercises
 from . import db as statistic_db
 
 
@@ -98,3 +102,68 @@ async def set_statistics_exercises(
         done=done,
         created=created
     )
+
+
+async def get_current_statistic(telegram_user_id: int) -> str | None:
+    user = await user_db.get_user(telegram_id=telegram_user_id)
+    if not user:
+        return
+
+    statistics_program = await statistic_db.get_active_statistics_program(
+        user_id=user.id,
+    )
+    if not statistics_program:
+        logger.info(f"Not exist active program in user {user.id}")
+        return "<b>У вас не существует активной программы!!!</b>"
+
+    program = await program_db.get_program(id=statistics_program.program_id)
+    if not program:
+        logger.error(
+            f"Program not exist program_id {statistics_program.program_id}"
+        )
+        return None
+
+    statistics_exercises_list = await statistic_db.get_list_exercises(
+        program_id=program.id
+    )
+
+    return await get_text_program(
+        program_title=program.title,
+        statistics_program_date=statistics_program.start_time,
+        statistics_exercises_list=statistics_exercises_list
+    )
+
+
+async def get_text_program(
+    program_title: str,
+    statistics_program_date: datetime,
+    statistics_exercises_list: StatisticsExercises
+) -> str:
+    title = f"<b>{program_title}</b> "\
+            f"[{statistics_program_date.strftime('%Y-%m-%d')}]\n"
+    current_date = ''
+    lines = defaultdict(list)
+    for exercises_stc in statistics_exercises_list:
+        exercises = await program_db.get_exercises(
+            exercises_id=exercises_stc.exercises_id
+        )
+
+        date = f"\n<b>{DAYS_WEEK.get(exercises.day)}</b> "\
+               f"[{exercises_stc.created.strftime('%m-%d')}]\n"
+
+        if current_date != date:
+            lines[date]
+            current_date = date
+
+        done = "✅" if exercises_stc.done else "❌"
+        line = f"{exercises.title} [{done}]"\
+               f" [🕔{exercises_stc.created.strftime('%H:%M')}]\n"
+        lines[date].append(line)
+
+    text = [title]
+    for day, exercises_list in lines.items():
+        text.append(day)
+        text.extend(
+            [f"{id}. {exe}" for id, exe in enumerate(exercises_list[::-1], 1)]
+        )
+    return ''.join(text)

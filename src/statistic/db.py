@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import insert, update, select, and_
+from sqlalchemy import insert, update, select, and_, desc
 from sqlalchemy import func
 
 from database import async_session
@@ -86,13 +86,13 @@ async def insert_statistics_exercises(
 
 
 async def get_statistics_exercises(
-    statistics_program_id: int,
+    program_id: int,
     exercises_id: int,
     created_filter: datetime = datetime.now()
 ) -> schemas.StatisticsExercises | None:
     query = select(statistics_exercises).where(
         and_(
-            statistics_exercises.c.statistics_program_id == statistics_program_id,
+            statistics_exercises.c.statistics_program_id == program_id,
             statistics_exercises.c.exercises_id == exercises_id,
             func.DATE(statistics_exercises.c.created) == created_filter.date()
         )
@@ -101,3 +101,15 @@ async def get_statistics_exercises(
         result = await session.execute(query)
         item = result.fetchone()
         return schemas.StatisticsExercises(*item) if item else None
+
+
+async def get_list_exercises(
+        program_id: int
+) -> list[schemas.StatisticsExercises]:
+    query = select(statistics_exercises).where(
+        statistics_exercises.c.statistics_program_id == program_id
+    ).order_by(desc(statistics_exercises.c.created))
+    async with async_session() as session:
+        result = await session.execute(query)
+        items = result.fetchall()
+        return [schemas.StatisticsExercises(*item) for item in items]

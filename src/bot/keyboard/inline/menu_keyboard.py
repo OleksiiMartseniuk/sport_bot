@@ -207,7 +207,7 @@ async def exercises_keyboard(
 
     if active_program:
         active_exercises = await db_statistic.get_statistics_exercises(
-            statistics_program_id=active_program.id,
+            program_id=active_program.id,
             exercises_id=exercises_id
         )
         if not active_exercises and date_now.weekday() == day:

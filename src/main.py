@@ -4,6 +4,7 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
 
 from bot.handlers.menu_program import register_handlers_program
+from bot.handlers.menu_statistic import register_handlers_statistic
 from bot.handlers.commands import setup_bot_commands
 from bot.middlewares.throttling import ThrottlingMiddleware
 from bot.middlewares.registration import RegistrationMiddleware
@@ -26,6 +27,7 @@ dp.middleware.setup(RegistrationMiddleware())
 
 # Register Handlers
 register_handlers_program(dp)
+register_handlers_statistic(dp)
 
 
 async def on_startup(dp: Dispatcher):
