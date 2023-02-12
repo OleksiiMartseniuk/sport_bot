@@ -13,11 +13,6 @@ async def setup_bot_commands(bot: Bot):
             description="Статистика"
         ),
         BotCommand(
-            command="/import_file",
-            description="Импорт файла"
-
-        ),
-        BotCommand(
             command="/cancel",
             description="Отменить текущее действие"
         ),
