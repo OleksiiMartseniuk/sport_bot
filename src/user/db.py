@@ -38,3 +38,20 @@ async def get_user(telegram_id: int) -> schemas.User | None:
         else:
             logger.error("User telegram id %s not exist.", telegram_id)
             return None
+
+
+async def get_not_active_users() -> list[int]:
+    query = select(user.c.telegram_id).where(user.c.is_active == False)
+    async with async_session() as session:
+        result = await session.execute(query)
+        return [user[0] for user in result.fetchall()]
+
+
+async def get_active_admins() -> list[int]:
+    query = select(user.c.telegram_id).where(
+        user.c.is_active == True,
+        user.c.is_admin == True,
+    )
+    async with async_session() as session:
+        result = await session.execute(query)
+        return [user[0] for user in result.fetchall()]
