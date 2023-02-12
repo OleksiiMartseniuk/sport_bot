@@ -9,6 +9,7 @@ from bot.handlers.import_file import register_handlers_import_file
 from bot.handlers.commands import setup_bot_commands
 from bot.middlewares.throttling import ThrottlingMiddleware
 from bot.middlewares.registration import RegistrationMiddleware
+from bot.middlewares.permission import PermissionMiddleware
 
 from config import TELEGRAM_TOKEN
 
@@ -25,6 +26,7 @@ dp = Dispatcher(bot, storage=RedisStorage2())
 # Setup middleware
 dp.middleware.setup(ThrottlingMiddleware())
 dp.middleware.setup(RegistrationMiddleware())
+dp.middleware.setup(PermissionMiddleware())
 
 # Register Handlers
 register_handlers_program(dp)
