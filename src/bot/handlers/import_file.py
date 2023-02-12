@@ -73,13 +73,7 @@ async def download_doc(message: types.Message, state: FSMContext):
         await state.finish()
 
 
-async def cmd_cancel(message: types.Message, state: FSMContext):
-    await message.answer("Действия отменено")
-    await state.finish()
-
-
 def register_handlers_import_file(dp: Dispatcher):
-    dp.register_message_handler(cmd_cancel, commands="cancel", state="*")
     dp.register_message_handler(
         import_start,
         commands="import_file",
