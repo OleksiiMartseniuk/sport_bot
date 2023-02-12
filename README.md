@@ -11,7 +11,7 @@
 
 ## About
 
-Telegram bot for choosing training programs, monitoring the implementation of exercises.
+Telegram bot for choosing training programs, monitoring the implementation of exercises and keeping statistics.
 
 ## Documentation
 
