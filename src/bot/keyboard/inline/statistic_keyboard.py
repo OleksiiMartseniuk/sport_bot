@@ -6,15 +6,19 @@ from user import db as db_user
 from programs import db as db_program
 
 
-menu_pr = CallbackData("show_menu_pr", "level", "program", "offset")
+menu_pr = CallbackData("show_menu_pr", "level", "programs_statistic", "offset")
 
 
 def make_callback_data(
     level: int,
-    program: int = 0,
+    programs_statistic: int = 0,
     offset: int = 0,
 ) -> str:
-    return menu_pr.new(level=level, program=program, offset=offset)
+    return menu_pr.new(
+        level=level,
+        programs_statistic=programs_statistic,
+        offset=offset
+    )
 
 
 async def program_keyboard(telegram_id: int) -> InlineKeyboardMarkup:
@@ -29,7 +33,7 @@ async def program_keyboard(telegram_id: int) -> InlineKeyboardMarkup:
         text = f"{program.title.capitalize()}"
         callback_data = make_callback_data(
             level=CURRENT_LEVEL + 1,
-            program=program.id
+            programs_statistic=program_statistic.id,
         )
         markup.row(
             InlineKeyboardButton(text=text, callback_data=callback_data)
@@ -38,30 +42,52 @@ async def program_keyboard(telegram_id: int) -> InlineKeyboardMarkup:
 
 
 async def statistic_keyboard(
-    program_id: int,
-    offset: int
+    programs_statistic: int,
+    offset: int,
+    limit: int = 8
 ) -> InlineKeyboardMarkup:
     CURRENT_LEVEL = 1
 
     markup = InlineKeyboardMarkup()
-    count_exercises = await db_statistic.get_count_exercises(
-        program_id=program_id
+
+    count = await db_statistic.get_count_exercises(
+        statistics_program_id=programs_statistic
     )
-    callback_data = make_callback_data(
-        level=CURRENT_LEVEL,
-        program=program_id
-    )
-    markup.insert(
-        InlineKeyboardButton(text="<", callback_data=callback_data)
-    )
+
+    def max_offset() -> int:
+        return int(count / limit) * limit
+
+    next = 0 if offset + limit >= count else offset + limit
+    previous = max_offset() if offset - limit < 0 else offset - limit
+
     markup.insert(
         InlineKeyboardButton(
-            text=f"{offset}/{count_exercises}",
-            callback_data=callback_data
+            text="<",
+            callback_data=make_callback_data(
+                level=CURRENT_LEVEL,
+                programs_statistic=programs_statistic,
+                offset=previous
+            )
         )
     )
     markup.insert(
-        InlineKeyboardButton(text=">", callback_data=callback_data)
+        InlineKeyboardButton(
+            text=f"{int(offset/limit) + 1}/{int(count/limit) + 1}",
+            callback_data=make_callback_data(
+                level=CURRENT_LEVEL,
+                programs_statistic=programs_statistic
+            )
+        )
+    )
+    markup.insert(
+        InlineKeyboardButton(
+            text=">",
+            callback_data=make_callback_data(
+                level=CURRENT_LEVEL,
+                programs_statistic=programs_statistic,
+                offset=next
+            )
+        )
     )
     markup.row(
         InlineKeyboardButton(
