@@ -104,7 +104,10 @@ async def set_statistics_exercises(
     )
 
 
-async def get_current_statistic(telegram_user_id: int) -> str | None:
+async def get_current_statistic(
+    telegram_user_id: int,
+    offset: int = 0
+) -> str | None:
     user = await user_db.get_user(telegram_id=telegram_user_id)
     if not user:
         return
@@ -124,7 +127,8 @@ async def get_current_statistic(telegram_user_id: int) -> str | None:
         return None
 
     statistics_exercises_list = await statistic_db.get_list_exercises(
-        program_id=program.id
+        program_id=program.id,
+        offset=offset
     )
 
     return await get_text_program(
