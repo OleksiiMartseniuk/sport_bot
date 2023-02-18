@@ -154,7 +154,7 @@ async def get_text_program(
         )
 
         date = f"\n<b>{DAYS_WEEK.get(exercises.day)}</b> "\
-               f"[{exercises_stc.created.strftime('%m-%d')}]\n"
+               f"[{exercises_stc.created.astimezone().strftime('%m-%d')}]\n"
 
         if current_date != date:
             lines[date]
@@ -162,7 +162,7 @@ async def get_text_program(
 
         done = "✅" if exercises_stc.done else "❌"
         line = f"{exercises.title} [{done}]"\
-               f" [🕔{exercises_stc.created.strftime('%H:%M')}]\n"
+               f" [🕔{exercises_stc.created.astimezone().strftime('%H:%M')}]\n"
         lines[date].append(line)
 
     text = [title]
