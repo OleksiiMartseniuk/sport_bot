@@ -126,6 +126,8 @@ async def get_program_statistic_text(
         program_id=program.id,
         offset=offset
     )
+    if not statistics_exercises_list:
+        return None
 
     return await get_text_program(
         program_title=program.title,
