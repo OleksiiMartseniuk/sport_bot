@@ -104,12 +104,28 @@ async def get_statistics_exercises(
 
 
 async def get_list_exercises(
-        program_id: int
-) -> list[schemas.StatisticsExercises]:
+        program_id: int,
+        offset: int = 0,
+        limit: int = 8
+) -> list[schemas.StatisticsExercises | None]:
     query = select(statistics_exercises).where(
         statistics_exercises.c.statistics_program_id == program_id
-    ).order_by(desc(statistics_exercises.c.created))
+    ).order_by(
+        desc(statistics_exercises.c.created)
+    ).offset(offset).limit(limit)
     async with async_session() as session:
         result = await session.execute(query)
         items = result.fetchall()
         return [schemas.StatisticsExercises(*item) for item in items]
+
+
+async def get_count_exercises(
+    program_id: int
+) -> int:
+    query = select(func.count(statistics_exercises.c.id)).where(
+        statistics_exercises.c.statistics_program_id == program_id
+    )
+    print(query)
+    async with async_session() as session:
+        result = await session.execute(query)
+        return result.scalar()
