@@ -125,7 +125,18 @@ async def get_count_exercises(
     query = select(func.count(statistics_exercises.c.id)).where(
         statistics_exercises.c.statistics_program_id == program_id
     )
-    print(query)
     async with async_session() as session:
         result = await session.execute(query)
         return result.scalar()
+
+
+async def get_list_program(
+    user_id: int
+) -> list[schemas.StatisticsProgram | None]:
+    query = select(statistics_program).where(
+        statistics_program.c.user_id == user_id
+    ).order_by(desc(statistics_program.c.finish_time))
+    async with async_session() as session:
+        result = await session.execute(query)
+        items = result.fetchall()
+        return [schemas.StatisticsProgram(*item) for item in items]
