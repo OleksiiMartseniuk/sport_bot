@@ -8,7 +8,7 @@ class StatisticsProgram:
     user_id: int
     program_id: int
     start_time: datetime
-    finish_time: datetime
+    finish_time: datetime | None
 
 
 @dataclass
