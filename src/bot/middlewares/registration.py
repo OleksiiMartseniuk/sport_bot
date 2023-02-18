@@ -3,7 +3,7 @@ import logging
 from aiogram import types
 from aiogram.dispatcher.middlewares import BaseMiddleware
 
-from user import db as user_db
+from user import db as db_user
 
 
 logger = logging.getLogger(__name__)
@@ -19,10 +19,10 @@ class RegistrationMiddleware(BaseMiddleware):
         else:
             return
 
-        user = await user_db.get_user(telegram_id=user.id)
-        if not user:
-            await user_db.create_user(
-                name=user.full_name,
+        user_db = await db_user.get_user(telegram_id=user.id)
+        if not user_db:
+            await db_user.create_user(
+                name=user.first_name,
                 telegram_id=user.id,
             )
             logger.info(
