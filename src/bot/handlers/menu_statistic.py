@@ -50,10 +50,13 @@ async def get_statistics(
         programs_statistic=programs_statistic,
         offset=offset
     )
-    text = await service_statistic.get_current_statistic(
-        telegram_user_id=callback.from_user.id,
+    text = await service_statistic.get_program_statistic_text(
+        programs_statistic=programs_statistic,
         offset=offset
     )
+    if not text:
+        text = "На данный момент вы не выполнили ни одного упражнения."\
+               " Перейдите в /program"
     description = "\n✅ / ❌ Статус выполнения упражнения\n"\
                   "🕔 Время завершения упражнения\n"
     text += description
