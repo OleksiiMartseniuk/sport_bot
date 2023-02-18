@@ -120,10 +120,10 @@ async def get_list_exercises(
 
 
 async def get_count_exercises(
-    program_id: int
+    statistics_program_id: int
 ) -> int:
     query = select(func.count(statistics_exercises.c.id)).where(
-        statistics_exercises.c.statistics_program_id == program_id
+        statistics_exercises.c.statistics_program_id == statistics_program_id
     )
     async with async_session() as session:
         result = await session.execute(query)
