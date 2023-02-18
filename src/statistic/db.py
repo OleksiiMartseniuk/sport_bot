@@ -51,6 +51,16 @@ async def get_active_statistics_program(
         return schemas.StatisticsProgram(*item) if item else None
 
 
+async def get_statistics_program(id: int) -> schemas.StatisticsProgram | None:
+    query = select(statistics_program).where(
+        statistics_program.c.id == id
+    )
+    async with async_session() as session:
+        result = await session.execute(query)
+        item = result.fetchone()
+        return schemas.StatisticsProgram(*item) if item else None
+
+
 async def check_active_statistics_program(
     user_id: int,
     program_id: int
@@ -72,7 +82,7 @@ async def insert_statistics_exercises(
     statistics_program_id: int,
     exercises_id: int,
     done: bool,
-    created: datetime = datetime.now()
+    created: datetime
 ) -> None:
     query = insert(statistics_exercises).values(
         statistics_program_id=statistics_program_id,
@@ -104,12 +114,39 @@ async def get_statistics_exercises(
 
 
 async def get_list_exercises(
-        program_id: int
-) -> list[schemas.StatisticsExercises]:
+        program_id: int,
+        offset: int = 0,
+        limit: int = 8
+) -> list[schemas.StatisticsExercises | None]:
     query = select(statistics_exercises).where(
         statistics_exercises.c.statistics_program_id == program_id
-    ).order_by(desc(statistics_exercises.c.created))
+    ).order_by(
+        desc(statistics_exercises.c.created)
+    ).offset(offset).limit(limit)
     async with async_session() as session:
         result = await session.execute(query)
         items = result.fetchall()
         return [schemas.StatisticsExercises(*item) for item in items]
+
+
+async def get_count_exercises(
+    statistics_program_id: int
+) -> int:
+    query = select(func.count(statistics_exercises.c.id)).where(
+        statistics_exercises.c.statistics_program_id == statistics_program_id
+    )
+    async with async_session() as session:
+        result = await session.execute(query)
+        return result.scalar()
+
+
+async def get_list_program(
+    user_id: int
+) -> list[schemas.StatisticsProgram | None]:
+    query = select(statistics_program).where(
+        statistics_program.c.user_id == user_id
+    ).order_by(desc(statistics_program.c.finish_time))
+    async with async_session() as session:
+        result = await session.execute(query)
+        items = result.fetchall()
+        return [schemas.StatisticsProgram(*item) for item in items]

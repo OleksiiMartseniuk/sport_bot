@@ -104,43 +104,48 @@ async def set_statistics_exercises(
     )
 
 
-async def get_current_statistic(telegram_user_id: int) -> str | None:
-    user = await user_db.get_user(telegram_id=telegram_user_id)
-    if not user:
-        return
-
-    statistics_program = await statistic_db.get_active_statistics_program(
-        user_id=user.id,
+async def get_program_statistic_text(
+    programs_statistic: int,
+    offset: int = 0
+) -> str | None:
+    statistics_program = await statistic_db.get_statistics_program(
+        id=programs_statistic,
     )
     if not statistics_program:
-        logger.info(f"Not exist active program in user {user.id}")
-        return "<b>У вас не существует активной программы!!!</b>"
+        logger.info(f"Not exist active program {programs_statistic}")
+        return None
 
-    program = await program_db.get_program(id=statistics_program.program_id)
+    program = await program_db.get_program(id=programs_statistic)
     if not program:
         logger.error(
-            f"Program not exist program_id {statistics_program.program_id}"
+            f"Program not exist program_id {programs_statistic}"
         )
         return None
 
     statistics_exercises_list = await statistic_db.get_list_exercises(
-        program_id=program.id
+        program_id=program.id,
+        offset=offset
     )
+    if not statistics_exercises_list:
+        return None
 
     return await get_text_program(
         program_title=program.title,
-        statistics_program_date=statistics_program.start_time,
+        date_start=statistics_program.start_time,
+        date_finish=statistics_program.finish_time,
         statistics_exercises_list=statistics_exercises_list
     )
 
 
 async def get_text_program(
     program_title: str,
-    statistics_program_date: datetime,
+    date_start: datetime,
+    date_finish: datetime | None,
     statistics_exercises_list: StatisticsExercises
 ) -> str:
     title = f"<b>{program_title}</b> "\
-            f"[{statistics_program_date.strftime('%Y-%m-%d')}]\n"
+            f"[{date_start.strftime('%Y-%m-%d')} - "\
+            f"{date_finish.strftime('%Y-%m-%d') if date_finish else ''}]\n"
     current_date = ''
     lines = defaultdict(list)
     for exercises_stc in statistics_exercises_list:
@@ -149,7 +154,7 @@ async def get_text_program(
         )
 
         date = f"\n<b>{DAYS_WEEK.get(exercises.day)}</b> "\
-               f"[{exercises_stc.created.strftime('%m-%d')}]\n"
+               f"[{exercises_stc.created.astimezone().strftime('%m-%d')}]\n"
 
         if current_date != date:
             lines[date]
@@ -157,7 +162,7 @@ async def get_text_program(
 
         done = "✅" if exercises_stc.done else "❌"
         line = f"{exercises.title} [{done}]"\
-               f" [🕔{exercises_stc.created.strftime('%H:%M')}]\n"
+               f" [🕔{exercises_stc.created.astimezone().strftime('%H:%M')}]\n"
         lines[date].append(line)
 
     text = [title]
