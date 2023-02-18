@@ -232,12 +232,11 @@ async def exercise_execution(call: types.CallbackQuery, callback_data: dict):
     exercises = callback_data.get("exercises", 0)
     statistics_program = callback_data.get("statistics_program", 0)
 
-    created = datetime.now()
     await db_statistic.insert_statistics_exercises(
         statistics_program_id=int(statistics_program),
         exercises_id=int(exercises),
         done=bool(int(done)),
-        created=created
+        created=datetime.now()
     )
 
     markup = await program_keyboard.exercises_keyboard(

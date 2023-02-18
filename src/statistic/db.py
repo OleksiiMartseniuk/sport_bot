@@ -82,7 +82,7 @@ async def insert_statistics_exercises(
     statistics_program_id: int,
     exercises_id: int,
     done: bool,
-    created: datetime = datetime.now()
+    created: datetime
 ) -> None:
     query = insert(statistics_exercises).values(
         statistics_program_id=statistics_program_id,
