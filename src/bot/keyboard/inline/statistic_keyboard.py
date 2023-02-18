@@ -30,7 +30,8 @@ async def program_keyboard(telegram_id: int) -> InlineKeyboardMarkup:
 
     for program_statistic in programs_statistic:
         program = await db_program.get_program(id=program_statistic.program_id)
-        text = f"{program.title.capitalize()}"
+        text = f"{program.title.capitalize()}"\
+               f"{'🔘' if not program_statistic.finish_time else ''}"
         callback_data = make_callback_data(
             level=CURRENT_LEVEL + 1,
             programs_statistic=program_statistic.id,
