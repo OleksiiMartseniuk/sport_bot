@@ -7,7 +7,7 @@ from user import db as user_db
 from programs import db as program_db
 from programs.schemas import DAYS_WEEK
 
-from .schemas import StatisticsExercises
+from .schemas import StatisticsExercises, StatisticsProgram
 from . import db as statistic_db
 
 
@@ -69,6 +69,17 @@ async def check_active_statistics_program(
     return await statistic_db.check_active_statistics_program(
         user_id=user.id,
         program_id=program_id
+    )
+
+
+async def get_active_statistics_program(
+    telegram_id: int
+) -> StatisticsProgram | None:
+    user = await user_db.get_user(telegram_id=telegram_id)
+    if not user:
+        return None
+    return await statistic_db.get_active_statistics_program(
+        user_id=user.id
     )
 
 
