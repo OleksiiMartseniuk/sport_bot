@@ -21,12 +21,17 @@ def make_callback_data(
     )
 
 
-async def program_keyboard(telegram_id: int) -> InlineKeyboardMarkup:
+async def program_keyboard(
+    telegram_id: int
+) -> tuple[InlineKeyboardMarkup, bool]:
     CURRENT_LEVEL = 0
+    CREATE = True
 
     markup = InlineKeyboardMarkup()
     user = await db_user.get_user(telegram_id=telegram_id)
     programs_statistic = await db_statistic.get_list_program(user.id)
+    if not programs_statistic:
+        CREATE = False
 
     for program_statistic in programs_statistic:
         program = await db_program.get_program(id=program_statistic.program_id)
@@ -39,7 +44,7 @@ async def program_keyboard(telegram_id: int) -> InlineKeyboardMarkup:
         markup.row(
             InlineKeyboardButton(text=text, callback_data=callback_data)
         )
-    return markup
+    return markup, CREATE
 
 
 async def statistic_keyboard(
