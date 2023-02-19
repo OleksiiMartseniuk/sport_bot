@@ -26,9 +26,11 @@ async def list_category(
     massage: types.Message | types.CallbackQuery,
     **kwargs
 ):
-    markup = await program_keyboard.category_keyboard()
     text = "Выберите категорию:"
     if isinstance(massage, types.Message):
+        markup = await program_keyboard.category_keyboard(
+            telegram_id=massage.from_user.id
+        )
         await massage.answer_photo(
             photo=MENU_IMAGE_FILE_ID,
             caption=text,
@@ -37,6 +39,9 @@ async def list_category(
         )
     elif isinstance(massage, types.CallbackQuery):
         callback: types.CallbackQuery = massage
+        markup = await program_keyboard.category_keyboard(
+            telegram_id=callback.from_user.id
+        )
         await callback.answer(cache_time=kwargs.get("cache_time"))
         await callback.message.edit_caption(
             caption=text,
@@ -52,7 +57,10 @@ async def list_programs(
     **kwargs
 ):
     await callback.answer(cache_time=cache_time)
-    markup = await program_keyboard.program_keyboard(category)
+    markup = await program_keyboard.program_keyboard(
+        category_id=category,
+        telegram_id=callback.from_user.id
+    )
     await callback.message.edit_caption(
         caption="<b>Выберите программу:</b>",
         reply_markup=markup,
