@@ -6,7 +6,10 @@ from aiogram.utils.callback_data import CallbackData
 from programs.constants import DAY_WEEK
 from programs import db as db_program
 from statistic import db as db_statistic
-from statistic.service import check_active_statistics_program
+from statistic.service import (
+    check_active_statistics_program,
+    get_active_statistics_program
+)
 
 
 menu_cd = CallbackData(
@@ -51,15 +54,19 @@ def make_callback_data(
     )
 
 
-async def category_keyboard() -> InlineKeyboardMarkup:
+async def category_keyboard(telegram_id: int) -> InlineKeyboardMarkup:
     CURRENT_LEVEL = 0
 
     markup = InlineKeyboardMarkup()
 
     categories = await db_program.get_category_list()
+    active = await get_active_statistics_program(telegram_id=telegram_id)
+    if active:
+        program = await db_program.get_program(id=active.program_id)
 
     for category in categories:
-        text = f"{category.title.capitalize()}"
+        text = f"{category.title.capitalize()}"\
+            f"{' 🔵' if active and program.category_id == category.id else ''}"
         callback_data = make_callback_data(
             level=CURRENT_LEVEL + 1,
             category=category.id
@@ -71,15 +78,21 @@ async def category_keyboard() -> InlineKeyboardMarkup:
     return markup
 
 
-async def program_keyboard(category_id: int) -> InlineKeyboardMarkup:
+async def program_keyboard(
+    category_id: int,
+    telegram_id: int
+) -> InlineKeyboardMarkup:
     CURRENT_LEVEL = 1
 
     markup = InlineKeyboardMarkup()
 
     programs = await db_program.get_programs_list(category_id)
+    active = await get_active_statistics_program(telegram_id=telegram_id)
 
     for program in programs:
         text = f"{program.title.capitalize()}"
+        if active:
+            text = text + f"{' 🔵' if active.program_id == program.id else ''}"
         callback_data = make_callback_data(
             level=CURRENT_LEVEL + 1,
             category=category_id,
