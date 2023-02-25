@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
-from bot.utils import get_max_offset, get_page
+from bot.utils import get_max_offset
 
 from statistic import db as db_statistic
 from user import db as db_user
@@ -78,36 +78,39 @@ async def statistic_keyboard(
     next = 0 if offset + limit >= count else offset + limit
     previous = get_max_offset(count, limit) if offset - limit < 0 \
         else offset - limit
+    page_max = int(count/limit)
 
-    markup.insert(
-        InlineKeyboardButton(
-            text="<",
-            callback_data=make_callback_data(
-                level=CURRENT_LEVEL,
-                programs_statistic=programs_statistic,
-                offset=previous
+    # more than one page
+    if page_max:
+        markup.insert(
+            InlineKeyboardButton(
+                text="<",
+                callback_data=make_callback_data(
+                    level=CURRENT_LEVEL,
+                    programs_statistic=programs_statistic,
+                    offset=previous
+                )
             )
         )
-    )
-    markup.insert(
-        InlineKeyboardButton(
-            text=get_page(offset, limit, count),
-            callback_data=make_callback_data(
-                level=CURRENT_LEVEL,
-                programs_statistic=programs_statistic
+        markup.insert(
+            InlineKeyboardButton(
+                text=f"{int(offset/limit) + 1} / {page_max}",
+                callback_data=make_callback_data(
+                    level=CURRENT_LEVEL,
+                    programs_statistic=programs_statistic
+                )
             )
         )
-    )
-    markup.insert(
-        InlineKeyboardButton(
-            text=">",
-            callback_data=make_callback_data(
-                level=CURRENT_LEVEL,
-                programs_statistic=programs_statistic,
-                offset=next
+        markup.insert(
+            InlineKeyboardButton(
+                text=">",
+                callback_data=make_callback_data(
+                    level=CURRENT_LEVEL,
+                    programs_statistic=programs_statistic,
+                    offset=next
+                )
             )
         )
-    )
     markup.row(
         InlineKeyboardButton(
             text="Назад",
