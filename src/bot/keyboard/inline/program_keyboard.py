@@ -65,8 +65,11 @@ async def category_keyboard(telegram_id: int) -> InlineKeyboardMarkup:
         program = await db_program.get_program(id=active.program_id)
 
     for category in categories:
-        text = f"{category.title.capitalize()}"\
-            f"{' 🔵' if active and program.category_id == category.id else ''}"
+        text = ""
+        if active:
+            text = f"{'🔵 ' if program.category_id == category.id else ''}"
+        text += f"{category.title.capitalize()}"
+
         callback_data = make_callback_data(
             level=CURRENT_LEVEL + 1,
             category=category.id
@@ -90,9 +93,10 @@ async def program_keyboard(
     active = await get_active_statistics_program(telegram_id=telegram_id)
 
     for program in programs:
-        text = f"{program.title.capitalize()}"
+        text = ""
         if active:
-            text = text + f"{' 🔵' if active.program_id == program.id else ''}"
+            text = f"{'🔵 ' if active.program_id == program.id else ''}"
+        text += f"{program.title.capitalize()}"
         callback_data = make_callback_data(
             level=CURRENT_LEVEL + 1,
             category=category_id,
