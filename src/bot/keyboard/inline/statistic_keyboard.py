@@ -1,6 +1,8 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
+from bot.utils import get_max_offset, get_page
+
 from statistic import db as db_statistic
 from user import db as db_user
 from programs import db as db_program
@@ -47,6 +49,19 @@ async def program_keyboard(
     return markup, CREATE
 
 
+async def get_program_menu(
+    telegram_id: int
+) -> tuple[InlineKeyboardMarkup, str]:
+    markup, create = await program_keyboard(
+        telegram_id=telegram_id
+    )
+    if create:
+        text = "Выберите программу:"
+    else:
+        text = "У вас не выбрана программа тренировок. Перейдите в /program"
+    return markup, text
+
+
 async def statistic_keyboard(
     programs_statistic: int,
     offset: int,
@@ -60,11 +75,9 @@ async def statistic_keyboard(
         statistics_program_id=programs_statistic
     )
 
-    def max_offset() -> int:
-        return int(count / limit) * limit
-
     next = 0 if offset + limit >= count else offset + limit
-    previous = max_offset() if offset - limit < 0 else offset - limit
+    previous = get_max_offset(count, limit) if offset - limit < 0 \
+        else offset - limit
 
     markup.insert(
         InlineKeyboardButton(
@@ -78,7 +91,7 @@ async def statistic_keyboard(
     )
     markup.insert(
         InlineKeyboardButton(
-            text=f"{int(offset/limit) + 1}/{int(count/limit) + 1}",
+            text=get_page(offset, limit, count),
             callback_data=make_callback_data(
                 level=CURRENT_LEVEL,
                 programs_statistic=programs_statistic

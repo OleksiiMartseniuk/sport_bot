@@ -3,7 +3,7 @@ import logging
 
 from aiogram import Dispatcher, types
 
-from bot.utils import rate_limit, get_program_menu
+from bot.utils import rate_limit
 from bot.keyboard.inline import statistic_keyboard
 from statistic import service as service_statistic
 
@@ -18,7 +18,9 @@ async def statistic_start(message: types.Message):
 
 async def list_program(massage: types.Message | types.CallbackQuery, **kwargs):
     if isinstance(massage, types.Message):
-        markup, text = await get_program_menu(telegram_id=massage.from_user.id)
+        markup, text = await statistic_keyboard.get_program_menu(
+            telegram_id=massage.from_user.id
+        )
         await massage.answer(
             text=text,
             parse_mode=types.ParseMode.HTML,
@@ -26,7 +28,7 @@ async def list_program(massage: types.Message | types.CallbackQuery, **kwargs):
         )
     elif isinstance(massage, types.CallbackQuery):
         callback: types.CallbackQuery = massage
-        markup, text = await get_program_menu(
+        markup, text = await statistic_keyboard.get_program_menu(
             telegram_id=callback.from_user.id
         )
         await callback.message.edit_text(
