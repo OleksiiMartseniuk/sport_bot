@@ -1,8 +1,3 @@
-from aiogram.types import InlineKeyboardMarkup
-
-from bot.keyboard.inline import statistic_keyboard
-
-
 def rate_limit(limit: int, key=None):
     """
     Decorator for configuring rate limit and key in different functions.
@@ -21,14 +16,7 @@ def rate_limit(limit: int, key=None):
     return decorator
 
 
-async def get_program_menu(
-    telegram_id: int
-) -> tuple[InlineKeyboardMarkup, str]:
-    markup, create = await statistic_keyboard.program_keyboard(
-        telegram_id=telegram_id
-    )
-    if create:
-        text = "Выберите программу:"
-    else:
-        text = "У вас не выбрана программа тренировок. Перейдите в /program"
-    return markup, text
+def get_max_offset(count: int, limit: int) -> int:
+    if not count % limit:
+        return (int(count / limit) * limit) - limit
+    return int(count / limit) * limit
