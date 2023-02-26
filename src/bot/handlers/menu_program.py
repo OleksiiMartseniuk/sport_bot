@@ -7,8 +7,10 @@ from aiogram import Dispatcher, types
 
 from config import MEDIA_ROOT, MENU_IMAGE_FILE_ID
 from programs import db as db_program
-from statistic import db as db_statistic
-from statistic.service import set_statistics_program
+from statistic.service import (
+    set_statistics_program,
+    insert_statistics_exercises
+)
 from programs.constants import DAY_WEEK
 from bot.keyboard.inline import program_keyboard
 from bot.utils import rate_limit
@@ -240,7 +242,8 @@ async def exercise_execution(call: types.CallbackQuery, callback_data: dict):
     exercises = callback_data.get("exercises", 0)
     statistics_program = callback_data.get("statistics_program", 0)
 
-    await db_statistic.insert_statistics_exercises(
+    await insert_statistics_exercises(
+        telegram_id=call.from_user.id,
         statistics_program_id=int(statistics_program),
         exercises_id=int(exercises),
         done=bool(int(done)),

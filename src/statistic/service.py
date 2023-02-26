@@ -83,13 +83,79 @@ async def get_active_statistics_program(
     )
 
 
+async def insert_statistics_exercises(
+    telegram_id: int,
+    statistics_program_id: int,
+    exercises_id: int,
+    done: bool,
+    created: datetime
+) -> None:
+    user = user = await user_db.get_user(telegram_id=telegram_id)
+    if not user:
+        return
+    await statistic_db.insert_statistics_exercises(
+        user_id=user.id,
+        statistics_program_id=statistics_program_id,
+        exercises_id=exercises_id,
+        done=done,
+        created=created
+    )
+
+
+async def get_count_exercises(
+    telegram_id: int,
+    program_id: int
+):
+    user = user = await user_db.get_user(telegram_id=telegram_id)
+    if not user:
+        return
+    return await statistic_db.get_count_exercises(
+        program_id=program_id,
+        user_id=user.id
+    )
+
+
+async def get_statistics_exercises(
+    telegram_id: int,
+    program_id: int,
+    exercises_id: int,
+    created_filter: datetime = datetime.now()
+):
+    user = user = await user_db.get_user(telegram_id=telegram_id)
+    if not user:
+        return
+    return await statistic_db.get_statistics_exercises(
+        user_id=user.id,
+        program_id=program_id,
+        exercises_id=exercises_id,
+        created_filter=created_filter
+    )
+
+
+async def get_list_exercises(
+    telegram_id: int,
+    program_id: int,
+    offset: int = 0,
+    limit: int = 8
+):
+    user = user = await user_db.get_user(telegram_id=telegram_id)
+    if not user:
+        return
+    return await statistic_db.get_list_exercises(
+        user_id=user.id,
+        program_id=program_id,
+        offset=offset,
+        limit=limit
+    )
+
+
 async def set_statistics_exercises(
     telegram_user_id: int,
     program_id: int,
     exercises_id: int,
     done: bool,
     created: datetime = datetime.now()
-):
+) -> None:
     user = await user_db.get_user(telegram_id=telegram_user_id)
     if not user:
         return
@@ -116,9 +182,14 @@ async def set_statistics_exercises(
 
 
 async def get_program_statistic_text(
+    telegram_id: int,
     programs_statistic: int,
     offset: int = 0
 ) -> str | None:
+    user = await user_db.get_user(telegram_id=telegram_id)
+    if not user:
+        return
+
     statistics_program = await statistic_db.get_statistics_program(
         id=programs_statistic,
     )
@@ -134,6 +205,7 @@ async def get_program_statistic_text(
         return None
 
     statistics_exercises_list = await statistic_db.get_list_exercises(
+        user_id=user.id,
         program_id=program.id,
         offset=offset
     )

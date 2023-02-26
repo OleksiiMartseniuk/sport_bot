@@ -46,10 +46,12 @@ async def get_statistics(
 ):
     await callback.answer(cache_time=cache_time)
     markup = await statistic_keyboard.statistic_keyboard(
+        telegram_id=callback.from_user.id,
         programs_statistic=programs_statistic,
         offset=offset
     )
     text = await service_statistic.get_program_statistic_text(
+        telegram_id=callback.from_user.id,
         programs_statistic=programs_statistic,
         offset=offset
     )

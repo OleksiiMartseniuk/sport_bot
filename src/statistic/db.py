@@ -79,12 +79,14 @@ async def check_active_statistics_program(
 
 
 async def insert_statistics_exercises(
+    user_id: int,
     statistics_program_id: int,
     exercises_id: int,
     done: bool,
     created: datetime
 ) -> None:
     query = insert(statistics_exercises).values(
+        user_id=user_id,
         statistics_program_id=statistics_program_id,
         exercises_id=exercises_id,
         done=done,
@@ -96,12 +98,14 @@ async def insert_statistics_exercises(
 
 
 async def get_statistics_exercises(
+    user_id: int,
     program_id: int,
     exercises_id: int,
     created_filter: datetime = datetime.now()
 ) -> schemas.StatisticsExercises | None:
     query = select(statistics_exercises).where(
         and_(
+            statistics_exercises.c.user_id == user_id,
             statistics_exercises.c.statistics_program_id == program_id,
             statistics_exercises.c.exercises_id == exercises_id,
             func.DATE(statistics_exercises.c.created) == created_filter.date()
@@ -114,12 +118,16 @@ async def get_statistics_exercises(
 
 
 async def get_list_exercises(
-        program_id: int,
-        offset: int = 0,
-        limit: int = 8
+    user_id: int,
+    program_id: int,
+    offset: int = 0,
+    limit: int = 8
 ) -> list[schemas.StatisticsExercises | None]:
     query = select(statistics_exercises).where(
-        statistics_exercises.c.statistics_program_id == program_id
+        and_(
+            statistics_exercises.c.user_id == user_id,
+            statistics_exercises.c.statistics_program_id == program_id
+        )
     ).order_by(
         desc(statistics_exercises.c.created)
     ).offset(offset).limit(limit)
@@ -130,10 +138,14 @@ async def get_list_exercises(
 
 
 async def get_count_exercises(
-    statistics_program_id: int
+    program_id: int,
+    user_id: int
 ) -> int:
     query = select(func.count(statistics_exercises.c.id)).where(
-        statistics_exercises.c.statistics_program_id == statistics_program_id
+        and_(
+            statistics_exercises.c.user_id == user_id,
+            statistics_exercises.c.statistics_program_id == program_id
+        )
     )
     async with async_session() as session:
         result = await session.execute(query)
