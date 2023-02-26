@@ -36,6 +36,12 @@ async def program_keyboard(
         CREATE = False
 
     for program_statistic in programs_statistic:
+        statistics_exercises_list = await db_statistic.get_list_exercises(
+            program_id=program_statistic.id
+        )
+        if not statistics_exercises_list:
+            continue
+
         program = await db_program.get_program(id=program_statistic.program_id)
         text = f"{'🔵 ' if not program_statistic.finish_time else ''}"\
                f"{program.title.capitalize()}"
