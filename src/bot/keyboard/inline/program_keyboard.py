@@ -5,10 +5,10 @@ from aiogram.utils.callback_data import CallbackData
 
 from programs.constants import DAY_WEEK
 from programs import db as db_program
-from statistic import db as db_statistic
 from statistic.service import (
     check_active_statistics_program,
-    get_active_statistics_program
+    get_active_statistics_program,
+    get_statistics_exercises
 )
 
 
@@ -223,7 +223,8 @@ async def exercises_keyboard(
     )
 
     if active_program:
-        active_exercises = await db_statistic.get_statistics_exercises(
+        active_exercises = await get_statistics_exercises(
+            telegram_id=user_id,
             program_id=active_program.id,
             exercises_id=exercises_id
         )

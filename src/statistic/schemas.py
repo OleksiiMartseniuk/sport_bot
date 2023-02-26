@@ -14,6 +14,7 @@ class StatisticsProgram:
 @dataclass
 class StatisticsExercises:
     id: int
+    user_id: int
     statistics_program_id: int
     exercises_id: int
     done: bool

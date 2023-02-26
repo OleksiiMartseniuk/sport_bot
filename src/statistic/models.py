@@ -22,6 +22,7 @@ statistics_exercises = Table(
     "statistics_exercises",
     metadata,
     Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, ForeignKey(user.c.id)),
     Column(
         "statistics_program_id",
         Integer,

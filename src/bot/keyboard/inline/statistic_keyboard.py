@@ -4,6 +4,7 @@ from aiogram.utils.callback_data import CallbackData
 from bot.utils import get_max_offset
 
 from statistic import db as db_statistic
+from statistic import service as service_sta
 from user import db as db_user
 from programs import db as db_program
 
@@ -36,6 +37,13 @@ async def program_keyboard(
         CREATE = False
 
     for program_statistic in programs_statistic:
+        statistics_exercises_list = await service_sta.get_list_exercises(
+            telegram_id=telegram_id,
+            program_id=program_statistic.id
+        )
+        if not statistics_exercises_list:
+            continue
+
         program = await db_program.get_program(id=program_statistic.program_id)
         text = f"{'🔵 ' if not program_statistic.finish_time else ''}"\
                f"{program.title.capitalize()}"
@@ -63,6 +71,7 @@ async def get_program_menu(
 
 
 async def statistic_keyboard(
+    telegram_id: int,
     programs_statistic: int,
     offset: int,
     limit: int = 8
@@ -71,8 +80,9 @@ async def statistic_keyboard(
 
     markup = InlineKeyboardMarkup()
 
-    count = await db_statistic.get_count_exercises(
-        statistics_program_id=programs_statistic
+    count = await service_sta.get_count_exercises(
+        telegram_id=telegram_id,
+        program_id=programs_statistic
     )
 
     next = 0 if offset + limit >= count else offset + limit
