@@ -45,8 +45,13 @@ async def program_keyboard(
             continue
 
         program = await db_program.get_program(id=program_statistic.program_id)
+        start_time = program_statistic.start_time.strftime('%Y-%m-%d')
+        finish_time = ""
+        if program_statistic.finish_time:
+            finish_time = program_statistic.finish_time.strftime('%Y-%m-%d')
         text = f"{'🔵 ' if not program_statistic.finish_time else ''}"\
-               f"{program.title.capitalize()}"
+               f"{program.title.capitalize()} "\
+               f"[{start_time} - {finish_time}]"
         callback_data = make_callback_data(
             level=CURRENT_LEVEL + 1,
             programs_statistic=program_statistic.id,
