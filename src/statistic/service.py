@@ -134,7 +134,7 @@ async def get_statistics_exercises(
 
 async def get_list_exercises(
     telegram_id: int,
-    program_id: int,
+    statistic_program: int,
     offset: int = 0,
     limit: int = 8
 ):
@@ -143,7 +143,7 @@ async def get_list_exercises(
         return
     return await statistic_db.get_list_exercises(
         user_id=user.id,
-        program_id=program_id,
+        statistic_program=statistic_program,
         offset=offset,
         limit=limit
     )
@@ -197,7 +197,7 @@ async def get_program_statistic_text(
         logger.info(f"Not exist active program {programs_statistic}")
         return None
 
-    program = await program_db.get_program(id=programs_statistic)
+    program = await program_db.get_program(id=statistics_program.program_id)
     if not program:
         logger.error(
             f"Program not exist program_id {programs_statistic}"
@@ -206,7 +206,7 @@ async def get_program_statistic_text(
 
     statistics_exercises_list = await statistic_db.get_list_exercises(
         user_id=user.id,
-        program_id=program.id,
+        statistic_program=statistics_program.id,
         offset=offset
     )
     if not statistics_exercises_list:
