@@ -119,14 +119,14 @@ async def get_statistics_exercises(
 
 async def get_list_exercises(
     user_id: int,
-    program_id: int,
+    statistic_program: int,
     offset: int = 0,
     limit: int = 8
 ) -> list[schemas.StatisticsExercises | None]:
     query = select(statistics_exercises).where(
         and_(
             statistics_exercises.c.user_id == user_id,
-            statistics_exercises.c.statistics_program_id == program_id
+            statistics_exercises.c.statistics_program_id == statistic_program
         )
     ).order_by(
         desc(statistics_exercises.c.created)

@@ -39,7 +39,7 @@ async def program_keyboard(
     for program_statistic in programs_statistic:
         statistics_exercises_list = await service_sta.get_list_exercises(
             telegram_id=telegram_id,
-            program_id=program_statistic.id
+            statistic_program=program_statistic.id
         )
         if not statistics_exercises_list:
             continue
