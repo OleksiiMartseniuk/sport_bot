@@ -1,3 +1,5 @@
+import math
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
@@ -93,7 +95,7 @@ async def statistic_keyboard(
     next = 0 if offset + limit >= count else offset + limit
     previous = get_max_offset(count, limit) if offset - limit < 0 \
         else offset - limit
-    page_max = int(count/limit)
+    page_max = math.ceil(count/limit)
 
     # more than one page
     if page_max:
