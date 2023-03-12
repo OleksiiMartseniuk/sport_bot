@@ -20,10 +20,19 @@ class DownloadFile(StatesGroup):
 
 
 async def import_start(message: types.Message,  state: FSMContext):
-    text = "Загрузите файл '<b>.csv</b>' \n"\
+    text = "Загрузите файл '<b>.csv</b>' \n\n"\
            "Обязательные поля [<b>category_title, program_title,"\
            " exercise_tile exercise_number_approaches,"\
-           " exercise_number_repetitions, exercise_day,exercise_image</b>]"
+           " exercise_number_repetitions, exercise_day,"\
+           " exercise_image</b>]\n\n"\
+           "<b>category_title</b> - Названия категории\n"\
+           "<b>program_title</b> - Названия программы тренировок\n"\
+           "<b>exercise_tile</b> - Названия упражнения\n"\
+           "<b>exercise_number_approaches</b> - Количество подходов\n"\
+           "<b>exercise_number_repetitions</b> - Количество повторений\n"\
+           "<b>exercise_day</b> - День недели в формате цифр [Пн-0, Вт-1,"\
+           " Ср-2, Чт-3, Пт-4, Сб-5, Вс-6]\n"\
+           "<b>exercise_image</b> - Ссылка на изображения\n"
     await message.answer(text=text, parse_mode=types.ParseMode.HTML)
     await state.set_state(DownloadFile.waiting_file.state)
 
