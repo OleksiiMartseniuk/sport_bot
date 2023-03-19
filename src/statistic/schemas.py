@@ -17,5 +17,13 @@ class StatisticsExercises:
     user_id: int
     statistics_program_id: int
     exercises_id: int
+    created: datetime
+
+
+@dataclass
+class StatisticsApproaches:
+    id: int
+    statistics_exercise_id: int
+    approaches: int
     done: bool
     created: datetime

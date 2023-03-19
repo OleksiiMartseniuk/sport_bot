@@ -35,6 +35,20 @@ statistics_exercises = Table(
         ForeignKey(exercises.c.id),
         nullable=False
     ),
+    Column("created", DateTime(timezone=True))
+)
+
+
+statistics_approaches = Table(
+    "statistics_approaches",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "statistics_exercise_id",
+        Integer,
+        ForeignKey("statistics_exercises.id")
+    ),
+    Column("approaches", Integer),
     Column("done", Boolean),
     Column("created", DateTime(timezone=True))
 )
