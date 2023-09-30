@@ -1,7 +1,9 @@
 import logging
 
 from aiogram import Bot, Dispatcher, executor
+from aiogram.utils.executor import start_webhook
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
+from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 from bot.handlers.menu_program import register_handlers_program
 from bot.handlers.menu_statistic import register_handlers_statistic
@@ -27,6 +29,7 @@ bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher(bot, storage=RedisStorage2())
 
 # Setup middleware
+dp.middleware.setup(LoggingMiddleware())
 dp.middleware.setup(ThrottlingMiddleware())
 dp.middleware.setup(RegistrationMiddleware())
 dp.middleware.setup(PermissionMiddleware())
@@ -38,9 +41,38 @@ register_handlers_statistic(dp)
 register_handlers_import_file(dp)
 
 
+# webhook settings
+WEBHOOK_HOST = 'http://localhost'
+WEBHOOK_PATH = '/webhook/{TOKEN}'
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+
+# webserver settings
+WEBAPP_HOST = 'localhost'
+WEBAPP_PORT = 3001
+
+
 async def on_startup(dp: Dispatcher):
+    await bot.set_webhook(WEBHOOK_URL)
     await setup_bot_commands(bot)
 
 
+async def on_shutdown(dp):
+    logging.warning('Shutting down..')
+
+    await bot.delete_webhook()
+    await dp.storage.close()
+    await dp.storage.wait_closed()
+
+    logging.warning('Bye!')
+
+
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+    start_webhook(
+        dispatcher=dp,
+        webhook_path=WEBHOOK_PATH,
+        on_startup=on_startup,
+        on_shutdown=on_shutdown,
+        skip_updates=True,
+        host=WEBAPP_HOST,
+        port=WEBAPP_PORT,
+    )
